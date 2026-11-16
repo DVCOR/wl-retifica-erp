@@ -51,11 +51,11 @@ echo "→ testes"
 falhas=0
 for f in supabase/tests/*.sql; do
   [[ "$(basename "$f")" == 0[01]_* ]] && continue
-  if "${PSQL[@]}" -c "begin;" -f "$f" -c "rollback;" >/tmp/wl_test_out.txt 2>&1; then
+  if "${PSQL[@]}" -c "begin;" -f "$f" -c "rollback;" >/tmp/${DB}_out.txt 2>&1; then
     echo "   ✓ $(basename "$f")"
   else
     echo "   ✗ $(basename "$f")"
-    sed 's/^/      /' /tmp/wl_test_out.txt
+    sed 's/^/      /' /tmp/${DB}_out.txt
     falhas=$((falhas + 1))
   fi
 done

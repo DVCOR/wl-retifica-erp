@@ -1,3 +1,5 @@
+import { modoLocal } from "@/lib/modo";
+
 /**
  * Variáveis públicas do Supabase. Têm valor de exemplo para o build não
  * depender do Supabase no ar (nada chama o Supabase em build time).
@@ -38,9 +40,25 @@ export const COOKIE_SESSAO = nomeCookieSessao(SUPABASE_URL);
  * Troca o início de uma URL gerada pelo servidor com a URL interna (ex.: URL
  * assinada do Storage) pela URL pública, para o navegador conseguir abrir.
  */
-export function urlParaNavegador(url: string): string {
+export function urlParaNavegador(url: string, mesmaOrigem = modoLocal()): string {
   const interna = SUPABASE_URL_SERVIDOR.replace(/\/$/, "");
   const publica = SUPABASE_URL.replace(/\/$/, "");
+  // Modo local: app e Supabase atendem na mesma origem (Caddy). Devolver o
+  // caminho relativo faz a foto abrir tanto por https://wl.local quanto pelo IP.
+  if (mesmaOrigem) {
+    if (url.startsWith(interna)) return url.slice(interna.length);
+    if (url.startsWith(publica)) return url.slice(publica.length);
+    return url;
+  }
   if (interna === publica || !url.startsWith(interna)) return url;
   return publica + url.slice(interna.length);
+}
+
+/**
+ * URL do Supabase vista pelo navegador. No modo local, app e Supabase estão na
+ * mesma origem, então usamos o endereço que o aparelho abriu (nome ou IP).
+ */
+export function urlSupabaseNavegador(): string {
+  if (modoLocal() && typeof window !== "undefined") return window.location.origin;
+  return SUPABASE_URL;
 }

@@ -9,3 +9,17 @@ describe("env", () => {
     expect(nomeCookieSessao("lixo")).toBe("sb-local-auth-token");
   });
 });
+
+describe("urlParaNavegador no modo local (mesma origem)", () => {
+  it("devolve só o caminho para a foto abrir pelo nome ou pelo IP", async () => {
+    const { urlParaNavegador, SUPABASE_URL_SERVIDOR } = await import("./env");
+    const base = SUPABASE_URL_SERVIDOR.replace(/\/$/, "");
+    expect(urlParaNavegador(`${base}/storage/v1/object/sign/os-anexos/a.jpg?token=x`, true)).toBe(
+      "/storage/v1/object/sign/os-anexos/a.jpg?token=x",
+    );
+  });
+  it("não mexe em URL de outro host", async () => {
+    const { urlParaNavegador } = await import("./env");
+    expect(urlParaNavegador("https://exemplo.com/x.jpg", true)).toBe("https://exemplo.com/x.jpg");
+  });
+});

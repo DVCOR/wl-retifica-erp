@@ -118,7 +118,7 @@ No **próprio servidor** Windows o `instalar.bat` como administrador já faz iss
 **Sobre o nome `wl.local`:** ele só funciona se a rede souber que `wl.local` é o servidor. Opções:
 1. **Roteador** com DNS local (alguns têm "DNS estático"/"Host names"): aponte `wl.local` para o IP do servidor.
 2. Nos PCs Windows: edite (como administrador) `C:\Windows\System32\drivers\etc\hosts` e acrescente a linha `192.168.0.10  wl.local`.
-3. Se nada disso der (Android costuma não resolver `.local`): **use o IP em todos os aparelhos**. Se preferir que o endereço "oficial" seja o IP, rode `trocar-endereco` informando o IP também como nome (ex.: Linux: `trocar-endereco.sh --ip 192.168.0.10 --host 192.168.0.10`).
+3. Se nada disso der (Android costuma não resolver `.local`): **use o IP em todos os aparelhos** (`https://192.168.0.10`). O sistema funciona normalmente pelo IP: login, fotos e tempo real seguem o endereço que o aparelho abriu. Só a etiqueta QR usa o endereço "oficial"; se quiser que ela aponte para o IP, rode `trocar-endereco` informando o IP também como nome (ex.: Linux: `trocar-endereco.sh --ip 192.168.0.10 --host 192.168.0.10`).
 
 ---
 

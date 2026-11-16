@@ -62,12 +62,11 @@ export function EditorOrcamento({ slug, osId, orcamento, itens: itensServidor, t
 
   // Reconcilia com o servidor quando itens entram/saem (mantém edições locais).
   const chaveServidor = itensServidor.map((i) => i.id).join(",");
-  React.useEffect(() => {
-    setItens((atual) =>
-      itensServidor.map((s) => atual.find((a) => a.id === s.id) ?? s),
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chaveServidor]);
+  const [chaveVista, setChaveVista] = React.useState(chaveServidor);
+  if (chaveVista !== chaveServidor) {
+    setChaveVista(chaveServidor);
+    setItens((atual) => itensServidor.map((s) => atual.find((a) => a.id === s.id) ?? s));
+  }
 
   const totais = calcularTotais(
     itens.map((i) => ({

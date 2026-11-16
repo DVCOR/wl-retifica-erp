@@ -1,6 +1,6 @@
 # Banco de dados (Fase 1)
 
-Migrations em `supabase/migrations/` (nunca editar uma já aplicada; criar nova). Testes em `supabase/tests/` (`pnpm test:db`). Tipos: `pnpm test:db && pnpm db:types` → `src/lib/supabase/types.ts`.
+Migrations em `supabase/migrations/` (nunca editar uma já aplicada; criar nova). Testes em `supabase/tests/` (`pnpm test:db`). Tipos: `pnpm test:db && pnpm db:types` → `src/lib/supabase/types.ts` (num banco de teste próprio: `TEST_DB=wl_test_x pnpm test:db && TEST_DB=wl_test_x pnpm db:types`). O gerador marca as colunas devolvidas por RPC como não anuláveis: trate-as como anuláveis ao mapear.
 
 ## Tabelas
 
@@ -12,7 +12,7 @@ Migrations em `supabase/migrations/` (nunca editar uma já aplicada; criar nova)
 | Checklist | `checklist_templates`, `checklist_template_itens`; modelo global `modelo_checklist_itens`, `modelo_servicos` |
 | OS | `os_sequencias`, `os`, `os_status_historico`, `os_checklist_itens` (snapshot), `os_medicoes`, `os_anexos`, `os_assinaturas` |
 | Orçamento | `orcamentos` (versões), `orcamento_itens` |
-| Execução/auditoria | `apontamentos` (`minutos` calculado), `auditoria` |
+| Execução/auditoria | `apontamentos` (`minutos` calculado), `auditoria` (`motivo` nas correções do checklist) |
 
 Integridade multi-tenant: toda tabela filha tem `empresa_id` e as FKs são **compostas** `(id, empresa_id)`, então é impossível apontar para registro de outra empresa.
 
@@ -46,8 +46,15 @@ Diferenças em relação ao SPEC item 12 (decisões):
 | `os_publica_fotos(token)` | **service_role** | caminhos das fotos para o servidor gerar URLs assinadas |
 | `responder_orcamento_publico(token, aprovar, nome, ip?, user_agent?)` | anon | aprova/reprova pelo link (valida validade), grava nome/IP/canal `link`, assinatura `aprovacao` e status da OS |
 | `buscar(empresa, termo, limite?)` | membro (invoker) | busca global: clientes (trigram/unaccent, documento, telefone), motores (código, série, placa), OS (número, placa do cliente do lojista) |
+| `listar_clientes(empresa, termo?, tipo?, ativo?, limite?, offset?)` | membro (invoker) | lista paginada; busca sem acento por nome/fantasia (trecho ou trigram), documento/telefone (dígitos ≥ 3), placa de motores do cliente e de OS; devolve `os_em_andamento` e `total` (window) em cada linha; mais relevantes primeiro |
+| `listar_motores(empresa, termo?, cliente?, limite?, offset?)` | membro (invoker) | lista paginada; busca sem acento por marca/modelo/código/série/veículo/nome do cliente e trecho de placa/série; sem termo e com `cliente` → só os do cliente; com termo → os do cliente primeiro; devolve `cliente_nome` e `total` |
+| `resumo_cliente(cliente)` | membro (invoker) | `os_em_andamento`, `os_12_meses`, `em_aberto` (soma dos orçamentos aprovados de OS aprovada/em execução/aguardando peça/pronta; null se não vê preço), `motores_em_garantia` (ignora OS `em_recebimento`) |
+| `salvar_kit(kit?, dados jsonb, itens jsonb)` | dono (invoker) | cria (`kit` null, `dados.empresa_id`) ou atualiza o kit e **substitui** os itens numa transação; `itens = [{tipo, id, quantidade}]`, ordem = posição; devolve o id |
+| `salvar_precos_tabela(tabela, precos jsonb)` | dono (invoker) | `precos = [{tipo, id, preco}]`: upsert; `preco` null remove o preço específico; tudo ou nada; devolve quantos mudaram |
+| `definir_tabela_padrao(tabela, tipo)` | dono (invoker) | a tabela vira a padrão do tipo de cliente e a anterior deixa de ser, atomicamente (`tipo` null tira o padrão); recusa tabela inativa |
+| `corrigir_checklist_os(item, motivo, status?, quantidade?, observacao?)` | dono (invoker) | única forma de alterar item do checklist depois do recebimento; grava em `auditoria` com `motivo` |
 
-Triggers: `updated_at`; normalização (documento, telefone, placa); número/token/padrões da OS; bloqueio de update direto de `status`, `numero`, `token_publico`, `orcamento_aprovado_id`, `entregue_em`, `garantia_ate`; histórico de status (insert/update, com membro e motivo); versão automática do orçamento (nova versão marca as anteriores como `substituido`); itens só em orçamento `rascunho`, preço sugerido quando `preco_unitario` é null, total do item e do orçamento; conformidade da medição; financeiro só altera colunas financeiras do cliente; sempre ≥1 dono ativo; auditoria genérica (insert/update/delete) nas tabelas principais. Entrega a partir de `pronto` calcula `garantia_ate`.
+Triggers: `updated_at`; normalização (documento, telefone, placa); número/token/padrões da OS; bloqueio de update direto de `status`, `numero`, `token_publico`, `orcamento_aprovado_id`, `entregue_em`, `garantia_ate`; histórico de status (insert/update, com membro e motivo); versão automática do orçamento (nova versão marca as anteriores como `substituido`); itens só em orçamento `rascunho`, preço sugerido quando `preco_unitario` é null, total do item e do orçamento; conformidade da medição; financeiro só altera colunas financeiras do cliente; sempre ≥1 dono ativo; auditoria genérica (insert/update/delete) nas tabelas principais. Entrega a partir de `pronto` calcula `garantia_ate`. **Checklist travado:** depois que a OS sai de `em_recebimento`, insert/update/delete em `os_checklist_itens` é recusado para todos; só `corrigir_checklist_os` (dono, motivo obrigatório via `app.motivo_checklist`) passa, e cada mudança vai para `auditoria` com o motivo. Índices trigram em `motores.veiculo_placa` e `os.cliente_final_placa` para busca por trecho de placa.
 
 ## RLS (estratégia)
 
@@ -69,4 +76,4 @@ Triggers: `updated_at`; normalização (documento, telefone, placa); número/tok
 
 `scripts/test-db.sh` recria `wl_test`, aplica `00_shim_supabase.sql` (papéis `anon/authenticated/service_role`, `auth.users`, `auth.uid()` via `request.jwt.claims`, grants padrão do Supabase), migrations (pula `*_storage.sql` sem schema `storage`), `seed.sql`, `01_helpers.sql` e roda cada `NN_*.sql` numa transação com rollback. Helpers: `tests.cenario()` (empresas `alfa`/`beta` com um usuário por papel), `tests.logar(email)`, `tests.anonimo()`, `tests.ok(cond, msg)`, `tests.erro(sql, msg, trecho)`, `tests.linhas(sql)`, `tests.contar(sql)`, `tests.receber_os(os)`.
 
-Cobertura: isolamento entre empresas em todas as tabelas/views, matriz de papéis, técnico sem preço, numeração e snapshot, link público/orçamento/entrega, convites, criação de empresa e busca.
+Cobertura: isolamento entre empresas em todas as tabelas/views, matriz de papéis, técnico sem preço, numeração e snapshot, link público/orçamento/entrega, convites, criação de empresa e busca; `50_banco_*`: catálogo atômico, checklist travado, listagens/resumo do cliente.

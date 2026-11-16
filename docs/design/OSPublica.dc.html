@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Seu orçamento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:#111827}
+a{color:#C8102E}a:hover{color:#A10E25}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F3F4F6; font-family: Inter, system-ui, sans-serif; color: #111827; display: flex; flex-direction: column; overflow-y: auto">
+  <header style="background: #0E0E10; color: #FFFFFF; padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 4px; border-bottom: 3px solid #C8102E">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px"><img src="/_blob/1b39e4d6b708a5dcc5aeba9e5dfb56db" alt="Logo WL Retífica" style="height: 36px; width: auto; border-radius: 6px; display: block"><span style="font-size: 15px; font-weight: 700">WL Retífica</span></div>
+    <span style="font-size: 22px; font-weight: 700">Seu orçamento está pronto</span>
+    <span style="font-size: 14px; color: #D1D5DB"><span style="font-family: 'JetBrains Mono', monospace">OS 2026-0145</span> · Ford Sigma 1.6</span>
+  </header>
+
+  <div style="padding: 16px; display: flex; flex-direction: column; gap: 14px">
+    <ol aria-label="Andamento" style="list-style: none; margin: 0; padding: 14px 16px; background: #FFFFFF; border-radius: 12px; display: flex; justify-content: space-between">
+      <li style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; color: #15803D; font-weight: 600">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: #15803D; display: inline-flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>Recebido</li>
+      <li style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; color: #15803D; font-weight: 600">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: #15803D; display: inline-flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg></span>Análise</li>
+      <li aria-current="step" style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; color: #A10E25; font-weight: 700">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: #C8102E; border: 4px solid #F9C9D0; box-sizing: border-box"></span>Orçamento</li>
+      <li style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; color: #4B5563">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: #E2E5EA"></span>Execução</li>
+      <li style="display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 11px; color: #4B5563">
+        <span style="width: 24px; height: 24px; border-radius: 50%; background: #E2E5EA"></span>Pronto</li>
+    </ol>
+
+    <section style="background: #FFFFFF; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+      <h2 style="margin: 0; font-size: 17px; font-weight: 700">O que encontramos</h2>
+      <p style="margin: 0; font-size: 15px; line-height: 1.5; color: #374151">Face do cabeçote empenada acima do limite e desgaste nas sedes de válvula. Cilindros dentro da medida.</p>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <div role="img" aria-label="Foto da face do cabeçote" style="height: 84px; border-radius: 8px; background: #D1D5DB; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #374151">[FOTO]</div>
+        <div role="img" aria-label="Foto das sedes de válvula" style="height: 84px; border-radius: 8px; background: #D1D5DB; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #374151">[FOTO]</div>
+        <div role="img" aria-label="Foto dos cilindros" style="height: 84px; border-radius: 8px; background: #D1D5DB; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #374151">[FOTO]</div>
+      </div>
+      <a href="#" style="font-size: 15px; font-weight: 600">Ver laudo completo</a>
+    </section>
+
+    <section style="background: #FFFFFF; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0 0 6px; font-size: 17px; font-weight: 700">Orçamento</h2>
+      <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EEF0F3; font-size: 15px"><span>Plainar face do cabeçote</span><span>R$ [VALOR]</span></div>
+      <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EEF0F3; font-size: 15px"><span>Retificar sedes (16 válvulas)</span><span>R$ [VALOR]</span></div>
+      <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EEF0F3; font-size: 15px"><span>Retentores de válvula (16)</span><span>R$ [VALOR]</span></div>
+      <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #EEF0F3; font-size: 15px"><span>Montagem do cabeçote</span><span>R$ [VALOR]</span></div>
+      <div style="display: flex; justify-content: space-between; gap: 12px; padding: 12px 0 2px; font-size: 18px; font-weight: 700"><span>Total</span><span>R$ [TOTAL]</span></div>
+      <span style="font-size: 13px; color: #4B5563">Válido até 22/11 · prazo de entrega 5 dias úteis após aprovação</span>
+    </section>
+
+    <sc-if value="{{pending}}" hint-placeholder-val="{{true}}">
+      <section style="background: #FFFFFF; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+        <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Seu nome
+          <input type="text" placeholder="Nome de quem está aprovando" style="height: 48px; border: 1px solid #D1D5DB; border-radius: 10px; padding: 0 12px; font: inherit; font-size: 16px; font-weight: 400">
+        </label>
+        <button type="button" onClick="{{approve}}" style="height: 56px; border: 0; background: #15803D; color: #FFFFFF; border-radius: 12px; font: inherit; font-size: 17px; font-weight: 700">Aprovar orçamento</button>
+        <button type="button" onClick="{{reject}}" style="height: 48px; border: 1px solid #D1D5DB; background: #FFFFFF; color: #111827; border-radius: 12px; font: inherit; font-size: 15px; font-weight: 600">Não aprovar</button>
+        <a href="#" style="text-align: center; font-size: 15px; font-weight: 600">Tirar dúvidas no WhatsApp</a>
+      </section>
+    </sc-if>
+    <sc-if value="{{approved}}" hint-placeholder-val="{{false}}">
+      <section style="background: #E7F6EC; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 18px; font-weight: 700; color: #14532D">Orçamento aprovado</span>
+        <span style="font-size: 15px; color: #14532D">Já avisamos a bancada. Você recebe uma mensagem quando o motor estiver pronto.</span>
+        <button type="button" onClick="{{reset}}" style="align-self: flex-start; margin-top: 6px; height: 44px; padding: 0 14px; border: 1px solid #15803D; background: transparent; color: #14532D; border-radius: 10px; font: inherit; font-size: 14px">Desfazer</button>
+      </section>
+    </sc-if>
+    <sc-if value="{{rejected}}" hint-placeholder-val="{{false}}">
+      <section style="background: #FFFFFF; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 18px; font-weight: 700">Orçamento não aprovado</span>
+        <span style="font-size: 15px; color: #374151">A retífica vai entrar em contato para combinar a devolução da peça.</span>
+        <button type="button" onClick="{{reset}}" style="align-self: flex-start; margin-top: 6px; height: 44px; padding: 0 14px; border: 1px solid #D1D5DB; background: transparent; color: #111827; border-radius: 10px; font: inherit; font-size: 14px">Desfazer</button>
+      </section>
+    </sc-if>
+    <footer style="text-align: center; font-size: 13px; color: #4B5563; padding: 8px 0 20px; line-height: 1.5">WL Retífica de Motores · Especialista em Cabeçotes<br>R. Dr. Mathias José de Barros Ponikwar, 254 · Jardim Campo Belo</footer>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { s: 'pending' };
+  }
+  renderVals() {
+    var self = this;
+    var s = this.state.s;
+    return {
+      pending: s === 'pending',
+      approved: s === 'approved',
+      rejected: s === 'rejected',
+      approve: function () { self.setState({ s: 'approved' }); },
+      reject: function () { self.setState({ s: 'rejected' }); },
+      reset: function () { self.setState({ s: 'pending' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

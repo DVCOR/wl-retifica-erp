@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Nova OS — checklist de recebimento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:#111827}
+a{color:#C8102E}a:hover{color:#A10E25}
+</style>
+</helmet>
+<div style="width: 1194px; height: 834px; box-sizing: border-box; background: #F3F4F6; font-family: Inter, system-ui, sans-serif; color: #111827; display: flex; flex-direction: column">
+  <header style="display: flex; align-items: center; gap: 16px; padding: 14px 24px; background: #FFFFFF; border-bottom: 1px solid #E2E5EA">
+    <a href="Main.dc.html" aria-label="Voltar ao quadro" style="width: 48px; height: 48px; border-radius: 10px; border: 1px solid #D1D5DB; display: inline-flex; align-items: center; justify-content: center; color: #111827">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 2px; flex: 1">
+      <div style="font-size: 20px; font-weight: 700">Nova OS · Checklist de recebimento</div>
+      <div style="font-size: 14px; color: #4B5563"><span style="font-family: 'JetBrains Mono', monospace">OS 2026-0152</span> · Oficina Exemplo A (lojista) · VW EA111 1.6 8v · carro do cliente ABC1D23</div>
+    </div>
+    <ol aria-label="Etapas" style="display: flex; gap: 6px; list-style: none; margin: 0; padding: 0">
+      <li style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #15803D; font-weight: 600; padding: 6px 10px; background: #E7F6EC; border-radius: 999px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Cliente</li>
+      <li style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #15803D; font-weight: 600; padding: 6px 10px; background: #E7F6EC; border-radius: 999px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Motor</li>
+      <li aria-current="step" style="font-size: 13px; color: #FFFFFF; font-weight: 600; padding: 6px 12px; background: #C8102E; border-radius: 999px">3 Checklist</li>
+      <li style="font-size: 13px; color: #4B5563; padding: 6px 10px; background: #E9EBEF; border-radius: 999px">4 Fotos</li>
+      <li style="font-size: 13px; color: #4B5563; padding: 6px 10px; background: #E9EBEF; border-radius: 999px">5 Assinatura</li>
+    </ol>
+  </header>
+
+  <div style="flex: 1; display: flex; min-height: 0">
+    <nav aria-label="Grupos do checklist" style="width: 300px; background: #FFFFFF; border-right: 1px solid #E2E5EA; padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto">
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="7">
+        <button type="button" onClick="{{g.pick}}" style="{{g.style}}">
+          <span style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left">
+            <span style="font-size: 16px; font-weight: 600">{{g.name}}</span>
+            <span style="font-size: 13px; color: #4B5563">{{g.summary}}</span>
+          </span>
+          <sc-if value="{{g.hasIssues}}" hint-placeholder-val="{{false}}">
+            <span style="min-width: 28px; height: 28px; border-radius: 999px; background: #FDECEC; color: #B91C1C; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">{{g.issues}}</span>
+          </sc-if>
+        </button>
+      </sc-for>
+    </nav>
+
+    <main style="flex: 1; min-width: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto">
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <div>
+          <h1 style="margin: 0; font-size: 22px; font-weight: 700">{{current.name}}</h1>
+          <p style="margin: 2px 0 0; font-size: 14px; color: #4B5563">Tudo começa como OK. Toque só no que estiver diferente.</p>
+        </div>
+        <button type="button" style="height: 48px; padding: 0 16px; border: 1px solid #D1D5DB; background: #FFFFFF; border-radius: 10px; font: inherit; font-size: 15px; font-weight: 500; color: #111827">Grupo inteiro N/A</button>
+      </div>
+
+      <sc-for list="{{items}}" as="it" hint-placeholder-count="5">
+        <div style="background: #FFFFFF; border: 1px solid #E2E5EA; border-radius: 12px; padding: 12px 14px; display: flex; align-items: center; gap: 14px">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 16px; font-weight: 600">{{it.label}}</span>
+            <sc-if value="{{it.hasQty}}" hint-placeholder-val="{{false}}">
+              <span style="font-size: 13px; color: #4B5563">Quantidade: <strong style="color: #111827">{{it.qty}}</strong></span>
+            </sc-if>
+          </div>
+          <div role="group" aria-label="Estado do item" style="display: flex; background: #F3F4F6; border-radius: 10px; padding: 4px; gap: 4px">
+            <sc-for list="{{it.opts}}" as="o" hint-placeholder-count="4">
+              <button type="button" onClick="{{o.pick}}" aria-pressed="{{o.active}}" style="{{o.style}}">{{o.label}}</button>
+            </sc-for>
+          </div>
+          <button type="button" aria-label="Tirar foto do item" style="width: 48px; height: 48px; border-radius: 10px; border: 1px solid #D1D5DB; background: #FFFFFF; display: inline-flex; align-items: center; justify-content: center; color: #374151">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+          </button>
+        </div>
+      </sc-for>
+    </main>
+  </div>
+
+  <footer style="display: flex; align-items: center; gap: 16px; padding: 14px 24px; background: #FFFFFF; border-top: 1px solid #E2E5EA">
+    <div style="flex: 1; font-size: 15px; color: #111827">
+      <strong>{{totalIssues}}</strong> <span style="color: #4B5563">divergência(s) registrada(s). Elas aparecem no resumo para o cliente assinar.</span>
+    </div>
+    <button type="button" style="height: 52px; padding: 0 24px; border: 0; background: #C8102E; color: #FFFFFF; border-radius: 12px; font: inherit; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px">
+      Próximo: fotos
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg>
+    </button>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1194,"height":834}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: 2, st: { 'c-1': 'danificado', 'c-3': 'ausente' } };
+  }
+  renderVals() {
+    var self = this;
+    var data = [
+      { id: 'i', name: 'Identificação', items: ['Marca, modelo e código do motor', 'Nº de série / gravação', 'Veio montado', 'Veio limpo'] },
+      { id: 'e', name: 'Cabeçote · estrutura', items: ['Corpo do cabeçote', 'Face do cabeçote', 'Rosca das velas de ignição', 'Rosca dos prisioneiros'] },
+      { id: 'c', name: 'Cabeçote · componentes', items: ['Eixo de comando de válvulas', 'Válvulas de admissão e escape|8', 'Molas de válvula|8', 'Pratos e travas das válvulas', 'Retentores de válvula|8', 'Tuchos de válvula|8', 'Balancins e eixos'] },
+      { id: 'a', name: 'Cabeçote · acessórios', items: ['Prisioneiros do cabeçote/coletores', 'Velas de ignição|4', 'Carcaça da válvula termostática', 'Sensor de temperatura da água', 'Tampas de óleo / galerias'] },
+      { id: 'b', name: 'Bloco', items: ['Bloco do motor', 'Cilindros / camisas', 'Capas de mancal', 'Selos e bujões', 'Galerias de óleo e água'] },
+      { id: 'm', name: 'Conjunto móvel', items: ['Virabrequim', 'Bielas|4', 'Pistões e anéis|4', 'Bronzinas'] },
+      { id: 'd', name: 'Distribuição', items: ['Correia ou corrente', 'Tensor', 'Engrenagens / polias', 'Tampa frontal'] },
+      { id: 'p', name: 'Periféricos', items: ['Cárter', 'Bomba de óleo', 'Bomba d’água', 'Volante', 'Coletores', 'Junta e parafusos do cabeçote'] }
+    ];
+    var st = this.state.st;
+    var total = 0;
+    var groups = data.map(function (g, gi) {
+      var issues = 0;
+      g.items.forEach(function (_, ii) { var s = st[g.id + '-' + ii]; if (s && s !== 'ok' && s !== 'na') issues++; });
+      total += issues;
+      var active = gi === self.state.sel;
+      return {
+        name: g.name,
+        summary: g.items.length + ' itens',
+        issues: issues,
+        hasIssues: issues > 0,
+        pick: function () { self.setState({ sel: gi }); },
+        style: 'display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 60px; padding: 8px 12px; border-radius: 10px; font: inherit; cursor: pointer; color: #111827; ' + (active ? 'background: #FDECEE; border: 2px solid #C8102E;' : 'background: #FFFFFF; border: 2px solid transparent;')
+      };
+    });
+    var g = data[this.state.sel];
+    var opts = [['ok', 'OK'], ['danificado', 'Danificado'], ['ausente', 'Ausente'], ['na', 'N/A']];
+    var colors = { ok: ['#15803D', '#FFFFFF'], danificado: ['#B45309', '#FFFFFF'], ausente: ['#B91C1C', '#FFFFFF'], na: ['#4B5563', '#FFFFFF'] };
+    var items = g.items.map(function (raw, ii) {
+      var parts = raw.split('|');
+      var key = g.id + '-' + ii;
+      var cur = st[key] || 'ok';
+      return {
+        label: parts[0],
+        hasQty: parts.length > 1,
+        qty: parts[1] || '',
+        opts: opts.map(function (o) {
+          var on = cur === o[0];
+          return {
+            label: o[1],
+            active: on ? 'true' : 'false',
+            pick: function () { var n = Object.assign({}, self.state.st); n[key] = o[0]; self.setState({ st: n }); },
+            style: 'min-width: 92px; height: 48px; padding: 0 12px; border: 0; border-radius: 8px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; ' + (on ? 'background: ' + colors[o[0]][0] + '; color: ' + colors[o[0]][1] + ';' : 'background: transparent; color: #374151;')
+          };
+        })
+      };
+    });
+    return { groups: groups, items: items, current: { name: g.name }, totalIssues: total };
+  }
+}
+</script>
+</body>
+</html>

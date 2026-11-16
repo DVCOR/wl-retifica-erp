@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Modo bancada</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:#111827}
+a{color:#C8102E}a:hover{color:#A10E25}
+</style>
+</helmet>
+<div style="width: 1194px; height: 834px; box-sizing: border-box; background: #F3F4F6; font-family: Inter, system-ui, sans-serif; color: #111827; display: flex; flex-direction: column">
+  <header style="display: flex; align-items: center; gap: 16px; padding: 14px 24px; background: #0E0E10; color: #FFFFFF; border-bottom: 3px solid #C8102E">
+    <img src="/_blob/1b39e4d6b708a5dcc5aeba9e5dfb56db" alt="Logo WL Retífica" style="height: 44px; width: auto; border-radius: 6px; display: block">
+    <div style="flex: 1; display: flex; flex-direction: column">
+      <span style="font-size: 22px; font-weight: 700">Minha bancada</span>
+      <span style="font-size: 14px; color: #D1D5DB">João · Técnico · 3 OS atribuídas</span>
+    </div>
+    <button type="button" aria-label="Ler QR da etiqueta" style="height: 52px; padding: 0 18px; border: 1px solid #4B5563; background: #1F2937; color: #FFFFFF; border-radius: 12px; font: inherit; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 10px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4"></path><rect x="7" y="7" width="4" height="4"></rect><rect x="13" y="13" width="4" height="4"></rect><path d="M13 7h4v2M7 13v4h2"></path></svg>Ler etiqueta</button>
+  </header>
+
+  <div style="flex: 1; display: flex; gap: 16px; padding: 16px; min-height: 0">
+    <nav aria-label="Minhas OS" style="width: 300px; display: flex; flex-direction: column; gap: 10px">
+      <button type="button" aria-current="true" style="text-align: left; background: #FFFFFF; border: 3px solid #C8102E; border-radius: 14px; padding: 14px; font: inherit; color: #111827; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #4B5563">OS 2026-0139</span>
+        <span style="font-size: 18px; font-weight: 700">Fiat E.torQ 1.8</span>
+        <span style="font-size: 14px; color: #A10E25; font-weight: 600">Em execução · prazo 18/11</span>
+      </button>
+      <button type="button" style="text-align: left; background: #FFFFFF; border: 3px solid transparent; border-radius: 14px; padding: 14px; font: inherit; color: #111827; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #4B5563">OS 2026-0144</span>
+        <span style="font-size: 18px; font-weight: 700">MWM 4.10 diesel</span>
+        <span style="font-size: 14px; color: #B91C1C; font-weight: 600">Em análise · atrasada 1 dia</span>
+      </button>
+      <button type="button" style="text-align: left; background: #FFFFFF; border: 3px solid transparent; border-radius: 14px; padding: 14px; font: inherit; color: #111827; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #4B5563">OS 2026-0138</span>
+        <span style="font-size: 18px; font-weight: 700">VW AP 1.8</span>
+        <span style="font-size: 14px; color: #B91C1C; font-weight: 600">Em execução · atrasada 2 dias</span>
+      </button>
+    </nav>
+
+    <main style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+      <section style="background: #FFFFFF; border-radius: 14px; padding: 18px 20px; display: flex; align-items: center; gap: 18px">
+        <div style="flex: 1">
+          <div style="font-size: 14px; color: #4B5563">Serviço em andamento</div>
+          <div style="font-size: 22px; font-weight: 700">Retificar sedes de válvula</div>
+        </div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 36px; font-weight: 700; color: #111827" aria-label="Tempo decorrido">00:42:15</div>
+        <button type="button" style="height: 64px; padding: 0 26px; border: 0; background: #111827; color: #FFFFFF; border-radius: 14px; font: inherit; font-size: 18px; font-weight: 700; display: inline-flex; align-items: center; gap: 10px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"></rect><rect x="14" y="5" width="4" height="14" rx="1"></rect></svg>Pausar</button>
+      </section>
+
+      <div style="flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; min-height: 0">
+        <section style="background: #FFFFFF; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px">
+          <h2 style="margin: 0; font-size: 18px; font-weight: 700">Serviços aprovados</h2>
+          <label style="display: flex; align-items: center; gap: 14px; min-height: 56px; border-bottom: 1px solid #EEF0F3; font-size: 16px">
+            <input type="checkbox" checked style="width: 28px; height: 28px; accent-color: #15803D">Plainar face do cabeçote</label>
+          <label style="display: flex; align-items: center; gap: 14px; min-height: 56px; border-bottom: 1px solid #EEF0F3; font-size: 16px">
+            <input type="checkbox" checked style="width: 28px; height: 28px; accent-color: #15803D">Teste de trinca / estanqueidade</label>
+          <label style="display: flex; align-items: center; gap: 14px; min-height: 56px; border-bottom: 1px solid #EEF0F3; font-size: 16px; font-weight: 600">
+            <input type="checkbox" style="width: 28px; height: 28px; accent-color: #15803D">Retificar sedes de válvula (16)</label>
+          <label style="display: flex; align-items: center; gap: 14px; min-height: 56px; border-bottom: 1px solid #EEF0F3; font-size: 16px">
+            <input type="checkbox" style="width: 28px; height: 28px; accent-color: #15803D">Trocar guias de válvula (16)</label>
+          <label style="display: flex; align-items: center; gap: 14px; min-height: 56px; font-size: 16px">
+            <input type="checkbox" style="width: 28px; height: 28px; accent-color: #15803D">Montar cabeçote</label>
+        </section>
+
+        <section style="background: #FFFFFF; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; justify-content: space-between">
+            <h2 style="margin: 0; font-size: 18px; font-weight: 700">Medições</h2>
+            <button type="button" style="height: 44px; padding: 0 14px; border: 1px solid #D1D5DB; background: #FFFFFF; border-radius: 10px; font: inherit; font-size: 15px; font-weight: 600; color: #111827">+ Medição</button>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; background: #FDECEC">
+            <div style="flex: 1">
+              <div style="font-size: 15px; font-weight: 600">Empenamento da face</div>
+              <div style="font-size: 13px; color: #374151">Máx. 0,05 mm</div>
+            </div>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700">0,08 mm</span>
+            <span style="font-size: 13px; font-weight: 700; color: #FFFFFF; background: #B91C1C; border-radius: 6px; padding: 4px 8px">Fora</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; background: #E7F6EC">
+            <div style="flex: 1">
+              <div style="font-size: 15px; font-weight: 600">Folga de guia (adm.)</div>
+              <div style="font-size: 13px; color: #374151">0,02 a 0,06 mm</div>
+            </div>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700">0,04 mm</span>
+            <span style="font-size: 13px; font-weight: 700; color: #FFFFFF; background: #15803D; border-radius: 6px; padding: 4px 8px">OK</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; background: #E7F6EC">
+            <div style="flex: 1">
+              <div style="font-size: 15px; font-weight: 600">Teste de trinca</div>
+              <div style="font-size: 13px; color: #374151">Pressurizado</div>
+            </div>
+            <span style="font-size: 18px; font-weight: 700">Aprovado</span>
+            <span style="font-size: 13px; font-weight: 700; color: #FFFFFF; background: #15803D; border-radius: 6px; padding: 4px 8px">OK</span>
+          </div>
+          <p style="margin: 0; font-size: 13px; color: #4B5563">Valores e tolerâncias de exemplo. Medição fora da faixa sugere um item de orçamento ao balcão.</p>
+        </section>
+      </div>
+
+      <section style="display: flex; gap: 12px">
+        <button type="button" style="flex: 1; height: 64px; border: 2px solid #D1D5DB; background: #FFFFFF; color: #111827; border-radius: 14px; font: inherit; font-size: 17px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 10px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>Foto</button>
+        <button type="button" style="flex: 1; height: 64px; border: 2px solid #B45309; background: #FFFFFF; color: #92400E; border-radius: 14px; font: inherit; font-size: 17px; font-weight: 600">Aguardando peça</button>
+        <button type="button" style="flex: 2; height: 64px; border: 0; background: #15803D; color: #FFFFFF; border-radius: 14px; font: inherit; font-size: 18px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; gap: 10px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>Marcar OS como pronta</button>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1194,"height":834}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -311,16 +311,11 @@ export async function enviarOrcamentoAction(
 
   const { data, error } = await supabase.rpc("enviar_orcamento", { p_orcamento_id: orcamentoId });
   if (error) return falha(mensagemErroBanco(error));
-  const { data: os } = await supabase
-    .from("os")
-    .select("token_publico")
-    .eq("empresa_id", ctx.empresa.id)
-    .eq("id", osId)
-    .single();
+  const { data: token } = await supabase.rpc("os_link_publico", { p_os_id: osId });
   atualizar(slug, osId);
   return sucesso({
     versao: data.versao,
-    link: linkPublicoOs(SITE_URL, os?.token_publico ?? ""),
+    link: linkPublicoOs(SITE_URL, token ?? ""),
   });
 }
 

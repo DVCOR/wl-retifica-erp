@@ -66,7 +66,7 @@ export async function obterOsRecebimento(
   const { data: os, error } = await supabase
     .from("os")
     .select(
-      "id, numero, status, prazo_prometido, observacoes, cliente_id, motor_id, cliente_final_nome, cliente_final_placa, cliente_final_telefone, checklist_concluido_em, token_publico",
+      "id, numero, status, prazo_prometido, observacoes, cliente_id, motor_id, cliente_final_nome, cliente_final_placa, cliente_final_telefone, checklist_concluido_em",
     )
     .eq("empresa_id", empresaId)
     .eq("id", osId)
@@ -74,43 +74,46 @@ export async function obterOsRecebimento(
   if (error) throw new Error(`Erro ao carregar a OS: ${error.message}`);
   if (!os) return null;
 
-  const [cliente, motor, itensRes, anexosRes, assinaturaRes, pendenciaRes] = await Promise.all([
-    obterClienteParaOs(empresaId, os.cliente_id),
-    os.motor_id
-      ? supabase
-          .from("motores")
-          .select(COLUNAS_MOTOR)
-          .eq("empresa_id", empresaId)
-          .eq("id", os.motor_id)
-          .maybeSingle()
-          .then((r) => r.data)
-      : Promise.resolve(null),
-    supabase
-      .from("os_checklist_itens")
-      .select("id, grupo, descricao, ordem, exige_quantidade, status, quantidade, observacao")
-      .eq("empresa_id", empresaId)
-      .eq("os_id", osId)
-      .order("ordem"),
-    supabase
-      .from("os_anexos")
-      .select("id, storage_path, checklist_item_id")
-      .eq("empresa_id", empresaId)
-      .eq("os_id", osId)
-      .eq("etapa", "recebimento")
-      .order("created_at"),
-    supabase
-      .from("os_assinaturas")
-      .select("nome, documento, created_at")
-      .eq("empresa_id", empresaId)
-      .eq("os_id", osId)
-      .eq("tipo", "recebimento")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    os.status === "em_recebimento"
-      ? supabase.rpc("os_pendencias_para_status", { p_os_id: osId, p_para: "recebido" })
-      : Promise.resolve({ data: null, error: null }),
-  ]);
+  const [cliente, motor, itensRes, anexosRes, assinaturaRes, pendenciaRes, linkRes] =
+    await Promise.all([
+      obterClienteParaOs(empresaId, os.cliente_id),
+      os.motor_id
+        ? supabase
+            .from("motores")
+            .select(COLUNAS_MOTOR)
+            .eq("empresa_id", empresaId)
+            .eq("id", os.motor_id)
+            .maybeSingle()
+            .then((r) => r.data)
+        : Promise.resolve(null),
+      supabase
+        .from("os_checklist_itens")
+        .select("id, grupo, descricao, ordem, exige_quantidade, status, quantidade, observacao")
+        .eq("empresa_id", empresaId)
+        .eq("os_id", osId)
+        .order("ordem"),
+      supabase
+        .from("os_anexos")
+        .select("id, storage_path, checklist_item_id")
+        .eq("empresa_id", empresaId)
+        .eq("os_id", osId)
+        .eq("etapa", "recebimento")
+        .order("created_at"),
+      supabase
+        .from("os_assinaturas")
+        .select("nome, documento, created_at")
+        .eq("empresa_id", empresaId)
+        .eq("os_id", osId)
+        .eq("tipo", "recebimento")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      os.status === "em_recebimento"
+        ? supabase.rpc("os_pendencias_para_status", { p_os_id: osId, p_para: "recebido" })
+        : Promise.resolve({ data: null, error: null }),
+      // token do link público: só dono/balcão (a coluna não é legível por todos)
+      supabase.rpc("os_link_publico", { p_os_id: osId }),
+    ]);
   if (!cliente) return null;
   if (itensRes.error) throw new Error(`Erro ao carregar o checklist: ${itensRes.error.message}`);
   if (anexosRes.error) throw new Error(`Erro ao carregar as fotos: ${anexosRes.error.message}`);
@@ -137,7 +140,7 @@ export async function obterOsRecebimento(
     cliente_final_placa: os.cliente_final_placa,
     cliente_final_telefone: os.cliente_final_telefone,
     checklist_concluido_em: os.checklist_concluido_em,
-    token_publico: os.token_publico,
+    token_publico: linkRes.data ?? "",
     cliente,
     motor,
     itens: (itensRes.data ?? []).map((i) => ({

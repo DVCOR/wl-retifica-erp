@@ -30,15 +30,29 @@ export function rotaEmpresa(slug: string, ...partes: string[]): string {
   return "/" + [slug, ...partes].filter(Boolean).join("/");
 }
 
-/** Só aceita redirecionamento interno (evita open redirect no ?proximo=). */
+const ORIGEM_FICTICIA = "http://interno.invalid";
+
+/**
+ * Só aceita redirecionamento interno (evita open redirect no ?proximo=).
+ * Rejeita barra invertida e caracteres de controle (o parser de URL descarta
+ * TAB/LF, então "/\t/evil.com" viraria "//evil.com") e confere, resolvendo a
+ * URL, que a origem não mudou. Devolve o caminho normalizado.
+ */
 export function caminhoSeguro(proximo: string | null | undefined, padrao = "/"): string {
   if (
     !proximo ||
     !proximo.startsWith("/") ||
     proximo.startsWith("//") ||
-    proximo.startsWith("/\\")
+    proximo.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(proximo)
   ) {
     return padrao;
   }
-  return proximo;
+  try {
+    const url = new URL(proximo, ORIGEM_FICTICIA);
+    if (url.origin !== ORIGEM_FICTICIA || url.pathname.startsWith("//")) return padrao;
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return padrao;
+  }
 }

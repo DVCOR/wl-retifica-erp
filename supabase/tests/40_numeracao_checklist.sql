@@ -10,6 +10,7 @@ declare
   v_os1 public.os;
   v_os2 public.os;
   v_os3 public.os;
+  v_id3 uuid;
   v_template uuid;
   v_qtd_template integer;
 begin
@@ -33,7 +34,11 @@ begin
   -- inserir pelo app ignora número/status/token informados
   insert into public.os (empresa_id, numero, cliente_id, status, token_publico)
     values (v_alfa, '1999-999999', v_cli, 'entregue', '00000000-0000-0000-0000-000000000000')
-    returning * into v_os3;
+    returning id into v_id3;
+  -- (o token não é legível por authenticated: confere a linha como postgres)
+  perform tests.deslogar();
+  select * into v_os3 from public.os where id = v_id3;
+  perform tests.logar('a_balcao@t.local');
   perform tests.ok(v_os3.numero = v_ano || '-000004', 'número informado pelo app é ignorado');
   perform tests.ok(v_os3.status = 'em_recebimento', 'status informado no insert é ignorado');
   perform tests.ok(v_os3.token_publico <> '00000000-0000-0000-0000-000000000000', 'token informado é ignorado');

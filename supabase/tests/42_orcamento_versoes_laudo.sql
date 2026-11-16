@@ -59,7 +59,7 @@ begin
   perform public.enviar_orcamento(v_orc2);
 
   -- página pública: medições e orçamento vigente, sem dados pessoais
-  select token_publico into v_token from public.os where id = v_os;
+  v_token := public.os_link_publico(v_os);
   perform tests.anonimo();
   v_pub := public.os_publica(v_token);
   perform tests.ok((v_pub -> 'orcamento' ->> 'versao')::int = 2, 'público vê a versão vigente');

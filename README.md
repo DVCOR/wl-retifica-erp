@@ -25,7 +25,17 @@ Sistema de gestão de clientes e Ordens de Serviço para retíficas de motores (
 
 Fora do MVP (próximas fases): financeiro (Fase 2), estoque/WhatsApp API/portal do lojista (Fase 3), fiscal NF-e/NFS-e (Fase 4).
 
-## Colocar no ar (Supabase + Vercel)
+## Instalação na oficina (offline)
+
+O jeito oficial de rodar na WL: **um computador da oficina** com Supabase self-hosted (Docker Compose), o app em container e HTTPS local pelo Caddy; tablets e celulares acessam pela rede da oficina, **sem internet**. Passo a passo para leigos, backup, restauração e atualização: [`deploy/local/LEIA-ME.md`](deploy/local/LEIA-ME.md).
+
+```bash
+# Linux (Windows: deploy\local\scripts\windows\instalar.bat)
+sudo deploy/local/scripts/linux/instalar.sh
+```
+
+## Opcional: nuvem (Supabase + Vercel)
+
 
 1. **Supabase** — crie um projeto (região São Paulo, `sa-east-1`).
 2. **Banco** — com a [Supabase CLI](https://supabase.com/docs/guides/cli):

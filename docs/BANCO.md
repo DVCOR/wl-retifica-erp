@@ -37,6 +37,7 @@ Diferenças em relação ao SPEC item 12 (decisões):
 | `os_pendencias_para_status(os, status)` | membro | texto do que falta para o status (ou null) |
 | `os_transicao_permitida(de, para)`, `os_papeis_para_status(para)` | todos | regras (espelhadas em `src/lib/auth/permissoes.ts`) |
 | `regenerar_token_publico(os)` | dono/balcão | revoga o link público |
+| `os_link_publico(os)` | dono/balcão | token do link público. A coluna `os.token_publico` **não é legível** por `authenticated` (grant por coluna): técnico/financeiro não abrem a página pública (preços) nem respondem pelo cliente; `alterar_status_os` devolve o token nulo para eles. Nova coluna em `os` precisa de `grant select (coluna)` |
 | `preco_sugerido(empresa, cliente, servico, peca?)` | quem vê preço | preço unitário pela tabela do cliente (item da tabela → senão base × (1 − desconto da tabela)) |
 | `quantidade_sugerida(servico, motor)` | membro | 1, nº de cilindros ou nº de válvulas conforme `unidade` |
 | `adicionar_kit_orcamento(orcamento, kit)` | dono/balcão | insere os itens do kit |
@@ -70,6 +71,7 @@ Triggers: `updated_at`; normalização (documento, telefone, placa); número/tok
   - `os_sequencias`: sem política (só a função).
 - **Status** de OS/orçamento só por funções `security definer` (que checam papel); triggers barram update direto.
 - **Preço × técnico (estratégia escolhida):** as tabelas com coluna de preço (`servicos`, `pecas`, `tabelas_preco`, `tabela_preco_itens`, `orcamentos`, `orcamento_itens`) só são legíveis quando `pode_ver_precos(empresa_id)` (todos menos técnico, ou técnico se `empresas.config->>'tecnico_ve_precos' = 'true'`). O técnico usa as views **`v_servicos_catalogo`**, **`v_pecas_catalogo`** e **`v_orcamento_itens_sem_preco`** (com `concluido_em/concluido_por`), que não têm colunas de preço e filtram por `empresas_do_usuario()` (rodam com o dono da view, `security_barrier`; o advisor do Supabase vai apontá-las como “security definer view” — é intencional). `preco_sugerido()` devolve null para quem não vê preço. Não usamos privilégio por coluna porque o papel é por empresa.
+- Orçamento: `subtotal` só pelo recálculo dos itens; enviado/aprovado não muda desconto, validade, observações nem canal. Resposta (link ou balcão) recusada com a OS em recebimento, cancelada ou entregue.
 - `anon` não tem acesso a nenhuma tabela; só executa `os_publica`, `responder_orcamento_publico` e `convite_info`. Execução de funções é por lista explícita (`revoke ... from public, anon`).
 - Storage (`*_storage.sql`, só no Supabase real): bucket privado `os-anexos`, caminho `{empresa_id}/{os_id}/arquivo`; leitura por membros, upload dono/balcão/técnico, remoção dono/balcão. Bucket público `empresa-logos` (`{empresa_id}/...`, escrita do dono). `os_anexos.storage_path` tem check de prefixo `{empresa_id}/{os_id}/`.
 - Realtime: `os`, `os_status_historico`, `apontamentos` e `orcamentos` na publicação `supabase_realtime` (se existir); a RLS vale para os eventos.

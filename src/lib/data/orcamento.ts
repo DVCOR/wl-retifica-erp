@@ -33,18 +33,21 @@ export type OsOrcamento = {
   } | null;
 };
 
-export async function obterOsOrcamento(empresaId: string, osId: string): Promise<OsOrcamento | null> {
+export async function obterOsOrcamento(
+  empresaId: string,
+  osId: string,
+): Promise<OsOrcamento | null> {
   const supabase = await criarClienteServidor();
   const { data: os, error } = await supabase
     .from("os")
-    .select("id, numero, status, token_publico, cliente_id, motor_id")
+    .select("id, numero, status, cliente_id, motor_id")
     .eq("empresa_id", empresaId)
     .eq("id", osId)
     .maybeSingle();
   if (error) throw new Error(`Erro ao carregar a OS: ${error.message}`);
   if (!os) return null;
 
-  const [cli, mot] = await Promise.all([
+  const [cli, mot, link] = await Promise.all([
     supabase
       .from("clientes")
       .select("id, nome, telefone_whatsapp, tabela_preco_id")
@@ -59,13 +62,15 @@ export async function obterOsOrcamento(empresaId: string, osId: string): Promise
           .eq("id", os.motor_id)
           .maybeSingle()
       : Promise.resolve({ data: null, error: null }),
+    // token do link público: só dono/balcão (a coluna não é legível por todos)
+    supabase.rpc("os_link_publico", { p_os_id: os.id }),
   ]);
   if (!cli.data) return null;
   return {
     id: os.id,
     numero: os.numero,
     status: os.status,
-    token_publico: os.token_publico,
+    token_publico: link.data ?? "",
     cliente: cli.data,
     motor: mot.data ?? null,
   };
@@ -132,7 +137,9 @@ export async function listarMedicoes(empresaId: string, osId: string): Promise<M
     );
     for (const u of data ?? []) if (u.path && u.signedUrl) urls.set(u.path, u.signedUrl);
   }
-  const ids = [...new Set((med.data ?? []).map((m) => m.membro_id).filter((x): x is string => !!x))];
+  const ids = [
+    ...new Set((med.data ?? []).map((m) => m.membro_id).filter((x): x is string => !!x)),
+  ];
   const nomes = new Map<string, string>();
   if (ids.length > 0) {
     const { data } = await supabase.from("membros").select("id, nome").in("id", ids);

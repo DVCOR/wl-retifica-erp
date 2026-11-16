@@ -2168,6 +2168,7 @@ export type Database = {
       membro_atual: { Args: { p_empresa_id: string }; Returns: string };
       normalizar_busca: { Args: { texto: string }; Returns: string };
       orcamento_rascunho_para_sugestao: { Args: { p_os_id: string }; Returns: string };
+      os_link_publico: { Args: { p_os_id: string }; Returns: string };
       os_papeis_para_status: {
         Args: { p_para: Database["public"]["Enums"]["os_status"] };
         Returns: Database["public"]["Enums"]["papel"][];

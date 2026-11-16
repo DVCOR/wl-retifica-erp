@@ -4,3 +4,8 @@ pnpm-lock.yaml
 /docs/design
 /supabase
 /public
+/docs
+/scripts
+*.md
+CLAUDE.md
+AGENTS.md

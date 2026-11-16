@@ -44,7 +44,8 @@ function SelectContent({
         position={position}
         className={cn(
           "relative z-50 max-h-80 min-w-[8rem] overflow-hidden rounded-lg border border-borda bg-superficie text-texto shadow-lg",
-          position === "popper" && "w-full min-w-[var(--radix-select-trigger-width)] data-[side=bottom]:translate-y-1",
+          position === "popper" &&
+            "w-full min-w-[var(--radix-select-trigger-width)] data-[side=bottom]:translate-y-1",
           className,
         )}
         {...props}
@@ -55,7 +56,11 @@ function SelectContent({
   );
 }
 
-function SelectItem({ className, children, ...props }: React.ComponentProps<typeof SelectPrimitive.Item>) {
+function SelectItem({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof SelectPrimitive.Item>) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"

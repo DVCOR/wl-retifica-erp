@@ -73,13 +73,21 @@ export function BuscaGlobal({ className }: { className?: string }) {
       </button>
 
       <CommandDialog open={aberto} onOpenChange={setAberto}>
-        <CommandInput placeholder="Buscar cliente, placa, motor ou nº da OS" value={termo} onValueChange={setTermo} />
+        <CommandInput
+          placeholder="Buscar cliente, placa, motor ou nº da OS"
+          value={termo}
+          onValueChange={setTermo}
+        />
         <CommandList>
           <CommandEmpty>Nada encontrado.</CommandEmpty>
           {atalhos.length > 0 && (
             <CommandGroup heading="Ir para">
               {atalhos.map((i) => (
-                <CommandItem key={i.rota} value={i.rota} onSelect={() => ir(`/${empresa.slug}/${i.rota}`)}>
+                <CommandItem
+                  key={i.rota}
+                  value={i.rota}
+                  onSelect={() => ir(`/${empresa.slug}/${i.rota}`)}
+                >
                   <i.icone aria-hidden />
                   {i.rotulo}
                 </CommandItem>

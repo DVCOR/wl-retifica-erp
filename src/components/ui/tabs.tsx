@@ -10,7 +10,10 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
-      className={cn("flex w-full gap-1 overflow-x-auto border-b border-borda [scrollbar-width:none]", className)}
+      className={cn(
+        "flex w-full [scrollbar-width:none] gap-1 overflow-x-auto border-b border-borda",
+        className,
+      )}
       {...props}
     />
   );
@@ -30,7 +33,13 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
 }
 
 function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Content>) {
-  return <TabsPrimitive.Content data-slot="tabs-content" className={cn("pt-4 outline-none", className)} {...props} />;
+  return (
+    <TabsPrimitive.Content
+      data-slot="tabs-content"
+      className={cn("pt-4 outline-none", className)}
+      {...props}
+    />
+  );
 }
 
 export { Tabs, TabsList, TabsTrigger, TabsContent };

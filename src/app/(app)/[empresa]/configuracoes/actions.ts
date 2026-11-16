@@ -12,7 +12,10 @@ import { dadosEmpresaSchema } from "@/lib/validacoes/empresa";
  * 1) valida a entrada com zod  2) confere o papel (UX; a RLS garante de novo)
  * 3) grava com o cliente do usuário  4) revalidatePath  5) devolve ResultadoAcao.
  */
-export async function atualizarDadosEmpresa(slug: string, entrada: unknown): Promise<ResultadoAcao> {
+export async function atualizarDadosEmpresa(
+  slug: string,
+  entrada: unknown,
+): Promise<ResultadoAcao> {
   const dados = dadosEmpresaSchema.safeParse(entrada);
   if (!dados.success) return falhaValidacao(dados.error);
 

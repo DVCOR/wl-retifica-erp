@@ -5,7 +5,14 @@ import { SemAcesso } from "@/components/app/sem-acesso";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { pode, ROTULO_PAPEL } from "@/lib/auth/permissoes";
 import { listarMembros, obterDadosEmpresa } from "@/lib/data/empresa";
@@ -23,7 +30,10 @@ export default async function ConfiguracoesPage({ params }: PageProps<"/[empresa
   const { empresa, membro } = await obterContextoEmpresa(slug);
   if (!pode(membro.papel, "configuracoes.gerenciar")) return <SemAcesso slug={slug} />;
 
-  const [dados, membros] = await Promise.all([obterDadosEmpresa(empresa.id), listarMembros(empresa.id)]);
+  const [dados, membros] = await Promise.all([
+    obterDadosEmpresa(empresa.id),
+    listarMembros(empresa.id),
+  ]);
 
   return (
     <>
@@ -32,7 +42,9 @@ export default async function ConfiguracoesPage({ params }: PageProps<"/[empresa
         <Card>
           <CardHeader>
             <CardTitle>Empresa</CardTitle>
-            <CardDescription>Aparece nos comprovantes e no link enviado ao cliente.</CardDescription>
+            <CardDescription>
+              Aparece nos comprovantes e no link enviado ao cliente.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {dados && (
@@ -71,7 +83,9 @@ export default async function ConfiguracoesPage({ params }: PageProps<"/[empresa
                     <TableRow key={m.id}>
                       <TableCell className="font-medium">
                         {m.nome}
-                        {m.id === membro.id && <span className="ml-1 text-texto-secundario">(você)</span>}
+                        {m.id === membro.id && (
+                          <span className="ml-1 text-texto-secundario">(você)</span>
+                        )}
                         {!m.ativo && (
                           <Badge variant="contorno" className="ml-2">
                             Inativo
@@ -79,10 +93,16 @@ export default async function ConfiguracoesPage({ params }: PageProps<"/[empresa
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={m.papel === "dono" ? "primaria" : "neutro"}>{ROTULO_PAPEL[m.papel]}</Badge>
+                        <Badge variant={m.papel === "dono" ? "primaria" : "neutro"}>
+                          {ROTULO_PAPEL[m.papel]}
+                        </Badge>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell">{m.limite_desconto_pct}%</TableCell>
-                      <TableCell className="hidden md:table-cell">{formatarData(m.created_at)}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {m.limite_desconto_pct}%
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {formatarData(m.created_at)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

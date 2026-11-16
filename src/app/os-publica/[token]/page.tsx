@@ -18,10 +18,19 @@ export default async function OsPublicaPage({ params }: PageProps<"/os-publica/[
   return (
     <div className="min-h-dvh bg-fundo">
       <header className="flex h-16 items-center border-b-[3px] border-primaria bg-preto px-4">
-        <Image src="/brand/wl-marca.png" alt="WL Retífica" width={600} height={221} className="h-10 w-auto rounded-md" />
+        <Image
+          src="/brand/wl-marca.png"
+          alt="WL Retífica"
+          width={600}
+          height={221}
+          className="h-10 w-auto rounded-md"
+        />
       </header>
       <main className="mx-auto max-w-2xl px-4 py-8">
-        <EmConstrucao modulo="Acompanhamento da OS" descricao="Aqui o cliente verá o status, o orçamento e poderá aprovar." />
+        <EmConstrucao
+          modulo="Acompanhamento da OS"
+          descricao="Aqui o cliente verá o status, o orçamento e poderá aprovar."
+        />
       </main>
     </div>
   );

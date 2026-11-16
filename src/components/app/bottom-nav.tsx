@@ -4,7 +4,13 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, Plus } from "lucide-react";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { useEmpresa, usePermissao } from "@/lib/auth/empresa-context";
 import { cn } from "@/lib/utils";
 import { itemAtivo, itensCelular, type ItemNav } from "./nav-itens";
@@ -66,7 +72,10 @@ export function BottomNav() {
         {resto.length > 0 && (
           <button
             type="button"
-            className={cn(classeItem, resto.some((i) => itemAtivo(caminho, empresa.slug, i.rota)) && "text-primaria")}
+            className={cn(
+              classeItem,
+              resto.some((i) => itemAtivo(caminho, empresa.slug, i.rota)) && "text-primaria",
+            )}
             onClick={() => setMaisAberto(true)}
           >
             <Menu className="size-6" aria-hidden />

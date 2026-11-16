@@ -36,7 +36,8 @@ export default async function ConvitePage({ params }: PageProps<"/convite/[token
     <>
       <h1 className="text-xl font-bold">Convite para {info.empresa_nome}</h1>
       <p className="mt-1 mb-5 text-[15px] text-texto-secundario">
-        Você foi convidado como <strong className="text-texto">{ROTULO_PAPEL[info.papel]}</strong> ({info.email}).
+        Você foi convidado como <strong className="text-texto">{ROTULO_PAPEL[info.papel]}</strong> (
+        {info.email}).
       </p>
 
       {info.aceito ? (
@@ -55,14 +56,20 @@ export default async function ConvitePage({ params }: PageProps<"/convite/[token
           <EnviarLinkConvite token={token} email={info.email} />
           <p className="text-center text-sm text-texto-secundario">
             Já tem senha?{" "}
-            <Link className="font-semibold text-primaria hover:underline" href={`/login?proximo=/convite/${token}`}>
+            <Link
+              className="font-semibold text-primaria hover:underline"
+              href={`/login?proximo=/convite/${token}`}
+            >
               Entrar
             </Link>
           </p>
         </div>
       ) : usuario.email?.toLowerCase() !== info.email ? (
         <div className="grid gap-3">
-          <p role="alert" className="rounded-lg bg-alerta-suave px-3 py-2.5 text-[15px] text-alerta">
+          <p
+            role="alert"
+            className="rounded-lg bg-alerta-suave px-3 py-2.5 text-[15px] text-alerta"
+          >
             Você está conectado como {usuario.email}, mas o convite é para {info.email}.
           </p>
           <form action={sair}>

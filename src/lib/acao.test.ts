@@ -4,11 +4,18 @@ import { falhaValidacao, mensagemErroBanco, sucesso } from "./acao";
 
 describe("acao", () => {
   it("mensagemErroBanco", () => {
-    expect(mensagemErroBanco({ code: "P0001", message: "Tire ao menos 3 fotos" })).toBe("Tire ao menos 3 fotos");
-    expect(mensagemErroBanco({ code: "42501", message: 'new row violates row-level security policy for table "x"' })).toBe(
-      "Você não tem permissão para esta ação.",
+    expect(mensagemErroBanco({ code: "P0001", message: "Tire ao menos 3 fotos" })).toBe(
+      "Tire ao menos 3 fotos",
     );
-    expect(mensagemErroBanco({ code: "23505", message: "dup" })).toBe("Já existe um registro com estes dados.");
+    expect(
+      mensagemErroBanco({
+        code: "42501",
+        message: 'new row violates row-level security policy for table "x"',
+      }),
+    ).toBe("Você não tem permissão para esta ação.");
+    expect(mensagemErroBanco({ code: "23505", message: "dup" })).toBe(
+      "Já existe um registro com estes dados.",
+    );
   });
   it("falhaValidacao agrupa por campo", () => {
     const r = z.object({ nome: z.string().min(2, "curto") }).safeParse({ nome: "a" });

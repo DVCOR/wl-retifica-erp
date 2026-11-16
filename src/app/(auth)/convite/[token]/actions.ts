@@ -28,7 +28,8 @@ export async function enviarLinkConvite(entrada: unknown): Promise<ResultadoAcao
   const supabase = await criarClienteServidor();
   const { data: info } = await supabase.rpc("convite_info", { p_token: dados.data.token });
   const convite = info as { email?: string; expirado?: boolean; aceito?: boolean } | null;
-  if (!convite?.email || convite.expirado || convite.aceito) return falha("Convite inválido ou expirado.");
+  if (!convite?.email || convite.expirado || convite.aceito)
+    return falha("Convite inválido ou expirado.");
 
   const destino = new URL("/auth/callback", SITE_URL);
   destino.searchParams.set("proximo", `/convite/${dados.data.token}`);

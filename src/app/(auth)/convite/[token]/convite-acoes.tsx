@@ -7,7 +7,13 @@ import { Label } from "@/components/ui/label";
 import { FormErro } from "@/components/ui/form";
 import { aceitarConvite, enviarLinkConvite } from "./actions";
 
-export function AceitarConvite({ token, nomeSugerido }: { token: string; nomeSugerido?: string | null }) {
+export function AceitarConvite({
+  token,
+  nomeSugerido,
+}: {
+  token: string;
+  nomeSugerido?: string | null;
+}) {
   const [nome, setNome] = React.useState(nomeSugerido ?? "");
   const [erro, setErro] = React.useState<string | null>(null);
   const [pendente, startTransition] = React.useTransition();
@@ -25,7 +31,13 @@ export function AceitarConvite({ token, nomeSugerido }: { token: string; nomeSug
     >
       <div className="grid gap-1.5">
         <Label htmlFor="nome">Seu nome</Label>
-        <Input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="name" maxLength={80} />
+        <Input
+          id="nome"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          autoComplete="name"
+          maxLength={80}
+        />
       </div>
       <FormErro mensagem={erro} />
       <Button type="submit" size="lg" disabled={pendente}>

@@ -82,7 +82,10 @@ export type ConfigEmpresa = {
 };
 
 /** Pode ver preços? Todos menos o técnico, salvo config.tecnico_ve_precos (igual a pode_ver_precos() no banco). */
-export function podeVerPrecos(papel: Papel | null | undefined, config: ConfigEmpresa | null | undefined): boolean {
+export function podeVerPrecos(
+  papel: Papel | null | undefined,
+  config: ConfigEmpresa | null | undefined,
+): boolean {
   if (!papel) return false;
   return papel !== "tecnico" || config?.tecnico_ve_precos === true;
 }

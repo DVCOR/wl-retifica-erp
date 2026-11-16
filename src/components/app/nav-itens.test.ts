@@ -15,7 +15,11 @@ describe("menu por papel", () => {
     expect(itensDoPapel("financeiro").map((i) => i.rota)).not.toContain("configuracoes");
   });
   it("celular do dono segue o protótipo: Início, OS, Clientes", () => {
-    expect(itensCelular("dono").slice(0, 3).map((i) => i.rota)).toEqual(["inicio", "os", "clientes"]);
+    expect(
+      itensCelular("dono")
+        .slice(0, 3)
+        .map((i) => i.rota),
+    ).toEqual(["inicio", "os", "clientes"]);
   });
   it("itemAtivo", () => {
     expect(itemAtivo("/wl/os/123", "wl", "os")).toBe(true);

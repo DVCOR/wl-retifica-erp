@@ -41,7 +41,11 @@ function DropdownMenuItem({
   return (
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
-      className={cn(itemBase, variant === "destructive" && "text-perigo [&_svg]:text-perigo", className)}
+      className={cn(
+        itemBase,
+        variant === "destructive" && "text-perigo [&_svg]:text-perigo",
+        className,
+      )}
       {...props}
     />
   );
@@ -64,17 +68,31 @@ function DropdownMenuRadioItem({
   );
 }
 
-function DropdownMenuLabel({ className, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Label>) {
+function DropdownMenuLabel({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Label>) {
   return (
     <DropdownMenuPrimitive.Label
-      className={cn("px-3 py-2 text-xs font-semibold tracking-wide text-texto-secundario uppercase", className)}
+      className={cn(
+        "px-3 py-2 text-xs font-semibold tracking-wide text-texto-secundario uppercase",
+        className,
+      )}
       {...props}
     />
   );
 }
 
-function DropdownMenuSeparator({ className, ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
-  return <DropdownMenuPrimitive.Separator className={cn("-mx-1 my-1 h-px bg-borda", className)} {...props} />;
+function DropdownMenuSeparator({
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
+  return (
+    <DropdownMenuPrimitive.Separator
+      className={cn("-mx-1 my-1 h-px bg-borda", className)}
+      {...props}
+    />
+  );
 }
 
 export {

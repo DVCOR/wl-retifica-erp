@@ -103,8 +103,12 @@ describe("podeMoverOs()", () => {
   });
   it("técnico só move OS atribuída", () => {
     expect(podeMoverOs("tecnico", "recebido", "em_analise")).toBe(false);
-    expect(podeMoverOs("tecnico", "recebido", "em_analise", { atribuidaAoMembro: true })).toBe(true);
-    expect(podeMoverOs("tecnico", "em_analise", "orcamento_enviado", { atribuidaAoMembro: true })).toBe(false);
+    expect(podeMoverOs("tecnico", "recebido", "em_analise", { atribuidaAoMembro: true })).toBe(
+      true,
+    );
+    expect(
+      podeMoverOs("tecnico", "em_analise", "orcamento_enviado", { atribuidaAoMembro: true }),
+    ).toBe(false);
   });
   it("só o dono cancela; financeiro entrega", () => {
     expect(podeMoverOs("balcao", "recebido", "cancelado")).toBe(false);

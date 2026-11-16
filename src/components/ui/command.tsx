@@ -10,7 +10,10 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
   return (
     <CommandPrimitive
       data-slot="command"
-      className={cn("flex h-full w-full flex-col overflow-hidden rounded-xl bg-superficie text-texto", className)}
+      className={cn(
+        "flex h-full w-full flex-col overflow-hidden rounded-xl bg-superficie text-texto",
+        className,
+      )}
       {...props}
     />
   );
@@ -24,7 +27,10 @@ function CommandDialog({
 }: React.ComponentProps<typeof Dialog> & { titulo?: string; descricao?: string }) {
   return (
     <Dialog {...props}>
-      <DialogContent className="top-[12%] translate-y-0 overflow-hidden p-0 sm:max-w-xl" mostrarFechar={false}>
+      <DialogContent
+        className="top-[12%] translate-y-0 overflow-hidden p-0 sm:max-w-xl"
+        mostrarFechar={false}
+      >
         <DialogTitle className="sr-only">{titulo}</DialogTitle>
         <DialogDescription className="sr-only">{descricao}</DialogDescription>
         <Command shouldFilter={false}>{children}</Command>
@@ -33,12 +39,18 @@ function CommandDialog({
   );
 }
 
-function CommandInput({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Input>) {
+function CommandInput({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Input>) {
   return (
     <div className="flex h-14 items-center gap-3 border-b border-borda px-4">
       <Search className="size-5 shrink-0 text-texto-secundario" aria-hidden />
       <CommandPrimitive.Input
-        className={cn("h-full w-full bg-transparent text-base outline-none placeholder:text-texto-secundario/70", className)}
+        className={cn(
+          "h-full w-full bg-transparent text-base outline-none placeholder:text-texto-secundario/70",
+          className,
+        )}
         {...props}
       />
     </div>
@@ -46,14 +58,27 @@ function CommandInput({ className, ...props }: React.ComponentProps<typeof Comma
 }
 
 function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
-  return <CommandPrimitive.List className={cn("max-h-[60dvh] overflow-y-auto p-2", className)} {...props} />;
+  return (
+    <CommandPrimitive.List
+      className={cn("max-h-[60dvh] overflow-y-auto p-2", className)}
+      {...props}
+    />
+  );
 }
 
 function CommandEmpty(props: React.ComponentProps<typeof CommandPrimitive.Empty>) {
-  return <CommandPrimitive.Empty className="px-4 py-8 text-center text-[15px] text-texto-secundario" {...props} />;
+  return (
+    <CommandPrimitive.Empty
+      className="px-4 py-8 text-center text-[15px] text-texto-secundario"
+      {...props}
+    />
+  );
 }
 
-function CommandGroup({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.Group>) {
+function CommandGroup({
+  className,
+  ...props
+}: React.ComponentProps<typeof CommandPrimitive.Group>) {
   return (
     <CommandPrimitive.Group
       className={cn(
@@ -77,4 +102,12 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
   );
 }
 
-export { Command, CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem };
+export {
+  Command,
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+};

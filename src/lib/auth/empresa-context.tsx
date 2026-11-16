@@ -7,7 +7,13 @@ import { pode, podeVerPrecos, type Acao } from "./permissoes";
 const EmpresaContext = React.createContext<ContextoEmpresa | null>(null);
 
 /** Fornecido pelo layout src/app/(app)/[empresa]/layout.tsx. */
-export function EmpresaProvider({ valor, children }: { valor: ContextoEmpresa; children: React.ReactNode }) {
+export function EmpresaProvider({
+  valor,
+  children,
+}: {
+  valor: ContextoEmpresa;
+  children: React.ReactNode;
+}) {
   return <EmpresaContext value={valor}>{children}</EmpresaContext>;
 }
 

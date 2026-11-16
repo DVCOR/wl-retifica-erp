@@ -8,10 +8,21 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "docs/**", "supabase/**", "public/**"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts",
+    "docs/**",
+    "supabase/**",
+    "public/**",
+  ]),
 ]);
 
 export default eslintConfig;

@@ -13,7 +13,10 @@ export default async function Pagina({ params }: PageProps<"/[empresa]/os">) {
   if (!pode(membro.papel, "os.ver_quadro")) return <SemAcesso slug={slug} />;
   return (
     <>
-      <PageHeader titulo="Quadro de OS" descricao="Arraste o cartão para avançar o status. O sistema confere se a etapa está completa." />
+      <PageHeader
+        titulo="Quadro de OS"
+        descricao="Arraste o cartão para avançar o status. O sistema confere se a etapa está completa."
+      />
       <EmConstrucao modulo="O quadro de OS" />
     </>
   );

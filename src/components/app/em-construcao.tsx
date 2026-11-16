@@ -10,7 +10,8 @@ export function EmConstrucao({ modulo, descricao }: { modulo: string; descricao?
       descricao={
         <>
           <p>
-            <strong className="font-semibold text-texto">{modulo}</strong> chega nas próximas entregas.
+            <strong className="font-semibold text-texto">{modulo}</strong> chega nas próximas
+            entregas.
           </p>
           {descricao && <p className="mt-1">{descricao}</p>}
         </>

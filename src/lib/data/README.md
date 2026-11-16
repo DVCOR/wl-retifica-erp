@@ -12,8 +12,11 @@ import "server-only";
 import { criarClienteServidor } from "@/lib/supabase/server";
 
 export async function listarClientes(empresaId: string, filtro?: { tipo?: "lojista" | "final" }) {
-  const supabase = await criarClienteServidor();          // sessão do usuário → RLS vale
-  let q = supabase.from("clientes").select("id, nome, tipo, telefone_whatsapp").eq("empresa_id", empresaId);
+  const supabase = await criarClienteServidor(); // sessão do usuário → RLS vale
+  let q = supabase
+    .from("clientes")
+    .select("id, nome, tipo, telefone_whatsapp")
+    .eq("empresa_id", empresaId);
   if (filtro?.tipo) q = q.eq("tipo", filtro.tipo);
   const { data, error } = await q.order("nome");
   if (error) throw new Error(`Erro ao listar clientes: ${error.message}`);
@@ -31,10 +34,14 @@ export async function listarClientes(empresaId: string, filtro?: { tipo?: "lojis
 ```tsx
 export default async function Pagina({ params }: PageProps<"/[empresa]/clientes">) {
   const { empresa: slug } = await params;
-  const { empresa, membro } = await obterContextoEmpresa(slug);   // valida membro; memoizado
+  const { empresa, membro } = await obterContextoEmpresa(slug); // valida membro; memoizado
   if (!pode(membro.papel, "clientes.ver")) return <SemAcesso slug={slug} />;
   const clientes = await listarClientes(empresa.id);
-  return (<><PageHeader titulo="Clientes" /> ... </>);
+  return (
+    <>
+      <PageHeader titulo="Clientes" /> ...{" "}
+    </>
+  );
 }
 ```
 
@@ -44,21 +51,28 @@ Em componentes cliente: `useEmpresa()` (empresa, membro, config) e `usePermissao
 
 ```ts
 "use server";
-export async function criarCliente(slug: string, entrada: unknown): Promise<ResultadoAcao<{ id: string }>> {
-  const dados = clienteSchema.safeParse(entrada);              // 1. zod (src/lib/validacoes/<modulo>.ts)
+export async function criarCliente(
+  slug: string,
+  entrada: unknown,
+): Promise<ResultadoAcao<{ id: string }>> {
+  const dados = clienteSchema.safeParse(entrada); // 1. zod (src/lib/validacoes/<modulo>.ts)
   if (!dados.success) return falhaValidacao(dados.error);
   const { empresa, membro } = await obterContextoEmpresa(slug); // 2. empresa ativa + papel
   if (!pode(membro.papel, "clientes.cadastrar")) return falha("Sem permissão.");
-  const supabase = await criarClienteServidor();               // 3. grava com a sessão (RLS)
-  const { data, error } = await supabase.from("clientes")
-    .insert({ ...dados.data, empresa_id: empresa.id }).select("id").single();
+  const supabase = await criarClienteServidor(); // 3. grava com a sessão (RLS)
+  const { data, error } = await supabase
+    .from("clientes")
+    .insert({ ...dados.data, empresa_id: empresa.id })
+    .select("id")
+    .single();
   if (error) return falha(mensagemErroBanco(error));
-  revalidatePath(`/${slug}/clientes`);                          // 4. revalida
-  return sucesso({ id: data.id });                              // 5. ResultadoAcao
+  revalidatePath(`/${slug}/clientes`); // 4. revalida
+  return sucesso({ id: data.id }); // 5. ResultadoAcao
 }
 ```
 
 Regras:
+
 - Entrada sempre `unknown` + zod; o mesmo schema é usado no formulário (`zodResolver`).
 - Nunca confie em `empresa_id` vindo do cliente: use `obterContextoEmpresa(slug).empresa.id`.
 - Não lance erro para o cliente: devolva `ResultadoAcao` (`src/lib/acao.ts`). `mensagemErroBanco()` traduz erros do Postgres; as funções SQL já levantam mensagens em pt-BR (errcode `P0001`).
@@ -73,10 +87,10 @@ Regras:
 
 ## 5. Onde fica cada coisa
 
-| O quê | Onde |
-|---|---|
-| Leitura do módulo | `src/lib/data/<modulo>.ts` |
-| Schemas zod | `src/lib/validacoes/<modulo>.ts` |
-| Server Actions | `src/app/(app)/[empresa]/<rota>/actions.ts` |
-| Componentes do módulo | `src/components/<modulo>/` |
-| Testes de regra pura | `*.test.ts` ao lado (Vitest) |
+| O quê                 | Onde                                        |
+| --------------------- | ------------------------------------------- |
+| Leitura do módulo     | `src/lib/data/<modulo>.ts`                  |
+| Schemas zod           | `src/lib/validacoes/<modulo>.ts`            |
+| Server Actions        | `src/app/(app)/[empresa]/<rota>/actions.ts` |
+| Componentes do módulo | `src/components/<modulo>/`                  |
+| Testes de regra pura  | `*.test.ts` ao lado (Vitest)                |

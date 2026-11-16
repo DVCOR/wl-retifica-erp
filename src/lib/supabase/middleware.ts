@@ -25,7 +25,8 @@ export async function atualizarSessao(request: NextRequest) {
       setAll(cookiesParaGravar) {
         for (const { name, value } of cookiesParaGravar) request.cookies.set(name, value);
         response = NextResponse.next({ request });
-        for (const { name, value, options } of cookiesParaGravar) response.cookies.set(name, value, options);
+        for (const { name, value, options } of cookiesParaGravar)
+          response.cookies.set(name, value, options);
       },
     },
   });
@@ -37,7 +38,8 @@ export async function atualizarSessao(request: NextRequest) {
   if (!logado && !ehRotaPublica(caminho)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.search = caminho === "/" ? "" : `?proximo=${encodeURIComponent(caminho + request.nextUrl.search)}`;
+    url.search =
+      caminho === "/" ? "" : `?proximo=${encodeURIComponent(caminho + request.nextUrl.search)}`;
     const redirect = NextResponse.redirect(url);
     for (const c of response.cookies.getAll()) redirect.cookies.set(c);
     return redirect;

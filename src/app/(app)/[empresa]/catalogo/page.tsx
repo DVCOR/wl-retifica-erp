@@ -13,7 +13,10 @@ export default async function Pagina({ params }: PageProps<"/[empresa]/catalogo"
   if (!pode(membro.papel, "catalogo.ver")) return <SemAcesso slug={slug} />;
   return (
     <>
-      <PageHeader titulo="Catálogo e preços" descricao="Serviços, peças, tabelas de preço e kits." />
+      <PageHeader
+        titulo="Catálogo e preços"
+        descricao="Serviços, peças, tabelas de preço e kits."
+      />
       <EmConstrucao modulo="O catálogo" />
     </>
   );

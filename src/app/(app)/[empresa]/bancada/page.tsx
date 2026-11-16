@@ -13,7 +13,10 @@ export default async function Pagina({ params }: PageProps<"/[empresa]/bancada">
   if (!pode(membro.papel, "bancada.acessar")) return <SemAcesso slug={slug} />;
   return (
     <>
-      <PageHeader titulo="Minha bancada" descricao="Suas OS atribuídas: medições, apontamentos e status." />
+      <PageHeader
+        titulo="Minha bancada"
+        descricao="Suas OS atribuídas: medições, apontamentos e status."
+      />
       <EmConstrucao modulo="A bancada do técnico" />
     </>
   );

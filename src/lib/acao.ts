@@ -15,7 +15,10 @@ export function sucesso<T>(dados?: T): ResultadoAcao<T | undefined> {
   return { ok: true, dados };
 }
 
-export function falha(erro: string, campos?: Record<string, string[] | undefined>): { ok: false; erro: string; campos?: Record<string, string[] | undefined> } {
+export function falha(
+  erro: string,
+  campos?: Record<string, string[] | undefined>,
+): { ok: false; erro: string; campos?: Record<string, string[] | undefined> } {
   return { ok: false, erro, campos };
 }
 
@@ -33,7 +36,9 @@ export function falhaValidacao(erro: ZodError) {
  * Traduz erro do Postgres/Supabase para mensagem em pt-BR. As funções do banco
  * já levantam mensagens em português com errcode P0001 (regra de negócio).
  */
-export function mensagemErroBanco(erro: Pick<PostgrestError, "code" | "message"> | null | undefined): string {
+export function mensagemErroBanco(
+  erro: Pick<PostgrestError, "code" | "message"> | null | undefined,
+): string {
   if (!erro) return "Erro inesperado.";
   switch (erro.code) {
     case "P0001":

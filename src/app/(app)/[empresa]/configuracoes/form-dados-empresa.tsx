@@ -6,24 +6,36 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
-import { Form, FormControl, FormErro, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormErro,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { dadosEmpresaSchema, type DadosEmpresa } from "@/lib/validacoes/empresa";
 import { useEmpresa } from "@/lib/auth/empresa-context";
 import { atualizarDadosEmpresa } from "./actions";
 
-const CAMPOS: { nome: keyof DadosEmpresa; rotulo: string; tipo?: string; autoComplete?: string }[] = [
-  { nome: "nome_fantasia", rotulo: "Nome fantasia", autoComplete: "organization" },
-  { nome: "razao_social", rotulo: "Razão social" },
-  { nome: "telefone", rotulo: "Telefone / WhatsApp", tipo: "tel", autoComplete: "tel" },
-  { nome: "email", rotulo: "E-mail", tipo: "email", autoComplete: "email" },
-];
+const CAMPOS: { nome: keyof DadosEmpresa; rotulo: string; tipo?: string; autoComplete?: string }[] =
+  [
+    { nome: "nome_fantasia", rotulo: "Nome fantasia", autoComplete: "organization" },
+    { nome: "razao_social", rotulo: "Razão social" },
+    { nome: "telefone", rotulo: "Telefone / WhatsApp", tipo: "tel", autoComplete: "tel" },
+    { nome: "email", rotulo: "E-mail", tipo: "email", autoComplete: "email" },
+  ];
 
 /** Formulário de exemplo: react-hook-form + zod (mesmo schema da action) + Server Action. */
 export function FormDadosEmpresa({ inicial }: { inicial: DadosEmpresa }) {
   const { empresa } = useEmpresa();
   const [erro, setErro] = React.useState<string | null>(null);
   const [pendente, startTransition] = React.useTransition();
-  const form = useForm<DadosEmpresa>({ resolver: zodResolver(dadosEmpresaSchema), defaultValues: inicial });
+  const form = useForm<DadosEmpresa>({
+    resolver: zodResolver(dadosEmpresaSchema),
+    defaultValues: inicial,
+  });
 
   const onSubmit = (dados: DadosEmpresa) =>
     startTransition(async () => {
@@ -49,7 +61,12 @@ export function FormDadosEmpresa({ inicial }: { inicial: DadosEmpresa }) {
               <FormItem>
                 <FormLabel>{c.rotulo}</FormLabel>
                 <FormControl>
-                  <Input type={c.tipo ?? "text"} autoComplete={c.autoComplete} {...field} value={field.value ?? ""} />
+                  <Input
+                    type={c.tipo ?? "text"}
+                    autoComplete={c.autoComplete}
+                    {...field}
+                    value={field.value ?? ""}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

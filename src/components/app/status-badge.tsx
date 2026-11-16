@@ -7,7 +7,11 @@ import { cn } from "@/lib/utils";
 export function StatusBadge({ status, className }: { status: OsStatus; className?: string }) {
   const s = STATUS_OS[status];
   return (
-    <Badge variant={s.tom} className={cn(status === "cancelado" && "line-through", className)} title={s.descricao}>
+    <Badge
+      variant={s.tom}
+      className={cn(status === "cancelado" && "line-through", className)}
+      title={s.descricao}
+    >
       {s.rotulo}
     </Badge>
   );

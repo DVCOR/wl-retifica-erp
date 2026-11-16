@@ -34,9 +34,10 @@ type FormFieldContextValue = { name: string };
 const FormFieldContext = React.createContext<FormFieldContextValue | null>(null);
 const FormItemContext = React.createContext<{ id: string } | null>(null);
 
-function FormField<TFieldValues extends FieldValues = FieldValues, TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>>(
-  props: ControllerProps<TFieldValues, TName>,
-) {
+function FormField<
+  TFieldValues extends FieldValues = FieldValues,
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+>(props: ControllerProps<TFieldValues, TName>) {
   return (
     <FormFieldContext.Provider value={{ name: props.name }}>
       <Controller {...props} />
@@ -75,7 +76,14 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
 
 function FormLabel({ className, ...props }: React.ComponentProps<typeof Label>) {
   const { error, formItemId } = useFormField();
-  return <Label data-error={!!error} className={cn("data-[error=true]:text-perigo", className)} htmlFor={formItemId} {...props} />;
+  return (
+    <Label
+      data-error={!!error}
+      className={cn("data-[error=true]:text-perigo", className)}
+      htmlFor={formItemId}
+      {...props}
+    />
+  );
 }
 
 function FormControl(props: React.ComponentProps<typeof Slot.Root>) {
@@ -92,7 +100,13 @@ function FormControl(props: React.ComponentProps<typeof Slot.Root>) {
 
 function FormDescription({ className, ...props }: React.ComponentProps<"p">) {
   const { formDescriptionId } = useFormField();
-  return <p id={formDescriptionId} className={cn("text-sm text-texto-secundario", className)} {...props} />;
+  return (
+    <p
+      id={formDescriptionId}
+      className={cn("text-sm text-texto-secundario", className)}
+      {...props}
+    />
+  );
 }
 
 function FormMessage({ className, children, ...props }: React.ComponentProps<"p">) {
@@ -100,7 +114,12 @@ function FormMessage({ className, children, ...props }: React.ComponentProps<"p"
   const body = error ? String(error.message ?? "") : children;
   if (!body) return null;
   return (
-    <p id={formMessageId} role="alert" className={cn("text-sm font-medium text-perigo", className)} {...props}>
+    <p
+      id={formMessageId}
+      role="alert"
+      className={cn("text-sm font-medium text-perigo", className)}
+      {...props}
+    >
       {body}
     </p>
   );
@@ -110,10 +129,23 @@ function FormMessage({ className, children, ...props }: React.ComponentProps<"p"
 function FormErro({ mensagem }: { mensagem?: string | null }) {
   if (!mensagem) return null;
   return (
-    <p role="alert" className="rounded-lg bg-perigo-suave px-3 py-2.5 text-sm font-medium text-perigo">
+    <p
+      role="alert"
+      className="rounded-lg bg-perigo-suave px-3 py-2.5 text-sm font-medium text-perigo"
+    >
       {mensagem}
     </p>
   );
 }
 
-export { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage, FormErro, useFormField };
+export {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage,
+  FormErro,
+  useFormField,
+};

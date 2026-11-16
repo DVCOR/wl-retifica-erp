@@ -32,7 +32,11 @@ function SheetContent({
   return (
     <SheetPrimitive.Portal>
       <SheetPrimitive.Overlay className="fixed inset-0 z-50 bg-preto/60" />
-      <SheetPrimitive.Content data-slot="sheet-content" className={cn(sheetVariants({ side }), className)} {...props}>
+      <SheetPrimitive.Content
+        data-slot="sheet-content"
+        className={cn(sheetVariants({ side }), className)}
+        {...props}
+      >
         {children}
         <SheetPrimitive.Close
           className="absolute top-2 right-2 inline-flex size-11 items-center justify-center rounded-lg text-texto-secundario hover:bg-fundo hover:text-texto"
@@ -53,8 +57,16 @@ function SheetTitle({ className, ...props }: React.ComponentProps<typeof SheetPr
   return <SheetPrimitive.Title className={cn("text-lg font-semibold", className)} {...props} />;
 }
 
-function SheetDescription({ className, ...props }: React.ComponentProps<typeof SheetPrimitive.Description>) {
-  return <SheetPrimitive.Description className={cn("text-sm text-texto-secundario", className)} {...props} />;
+function SheetDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Description>) {
+  return (
+    <SheetPrimitive.Description
+      className={cn("text-sm text-texto-secundario", className)}
+      {...props}
+    />
+  );
 }
 
 export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetDescription };

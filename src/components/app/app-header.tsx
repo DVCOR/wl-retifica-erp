@@ -28,7 +28,9 @@ export function AppHeader() {
             priority
             className="h-9 w-auto rounded-md sm:h-10"
           />
-          <span className="hidden max-w-48 truncate text-lg font-bold xl:inline">{empresa.nome_fantasia}</span>
+          <span className="hidden max-w-48 truncate text-lg font-bold xl:inline">
+            {empresa.nome_fantasia}
+          </span>
         </Link>
 
         <BuscaGlobal className="lg:max-w-xl" />

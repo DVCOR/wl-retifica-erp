@@ -26,7 +26,8 @@ export function SidebarNav() {
             title={item.rotulo}
             className={cn(
               "flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg px-1 py-1.5 text-[11px] text-neutro transition-colors hover:bg-fundo lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-[15px]",
-              ativo && "bg-primaria-suave font-semibold text-primaria-hover hover:bg-primaria-suave",
+              ativo &&
+                "bg-primaria-suave font-semibold text-primaria-hover hover:bg-primaria-suave",
             )}
           >
             <item.icone className="size-5 shrink-0" aria-hidden />

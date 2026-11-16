@@ -13,7 +13,10 @@ export default async function Pagina({ params }: PageProps<"/[empresa]/clientes"
   if (!pode(membro.papel, "clientes.ver")) return <SemAcesso slug={slug} />;
   return (
     <>
-      <PageHeader titulo="Clientes" descricao="Lojistas e clientes finais, com o histórico de serviços." />
+      <PageHeader
+        titulo="Clientes"
+        descricao="Lojistas e clientes finais, com o histórico de serviços."
+      />
       <EmConstrucao modulo="A lista de clientes" />
     </>
   );

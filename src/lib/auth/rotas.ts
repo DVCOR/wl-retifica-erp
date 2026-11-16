@@ -32,7 +32,12 @@ export function rotaEmpresa(slug: string, ...partes: string[]): string {
 
 /** Só aceita redirecionamento interno (evita open redirect no ?proximo=). */
 export function caminhoSeguro(proximo: string | null | undefined, padrao = "/"): string {
-  if (!proximo || !proximo.startsWith("/") || proximo.startsWith("//") || proximo.startsWith("/\\")) {
+  if (
+    !proximo ||
+    !proximo.startsWith("/") ||
+    proximo.startsWith("//") ||
+    proximo.startsWith("/\\")
+  ) {
     return padrao;
   }
   return proximo;

@@ -16,7 +16,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <AppHeader />
       <div className="flex flex-1">
         <SidebarNav />
-        <main id="conteudo" className="min-w-0 flex-1 px-4 pt-5 pb-28 sm:px-6 md:pb-10 lg:px-8 lg:pt-7">
+        <main
+          id="conteudo"
+          className="min-w-0 flex-1 px-4 pt-5 pb-28 sm:px-6 md:pb-10 lg:px-8 lg:pt-7"
+        >
           {children}
         </main>
       </div>

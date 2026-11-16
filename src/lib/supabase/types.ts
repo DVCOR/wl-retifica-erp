@@ -1884,6 +1884,7 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      _exigir_tecnico_da_os: { Args: { p_os_id: string }; Returns: undefined };
       _preco_sugerido: {
         Args: {
           p_cliente_id: string;
@@ -1987,6 +1988,7 @@ export type Database = {
           titulo: string;
         }[];
       };
+      caminho_storage_seguro: { Args: { p: string }; Returns: boolean };
       convite_info: { Args: { p_token: string }; Returns: Json };
       corrigir_checklist_os: {
         Args: {

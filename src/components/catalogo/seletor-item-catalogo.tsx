@@ -32,7 +32,8 @@ const TITULO_GRUPO = { servico: "Serviços", peca: "Peças", kit: "Kits" } as co
 
 function rotuloUnidade(item: ItemCatalogo): string | null {
   if (item.tipo === "kit") return null;
-  if (item.tipo === "servico") return ROTULO_UNIDADE_CURTO[item.unidade as UnidadeServico] ?? item.unidade;
+  if (item.tipo === "servico")
+    return ROTULO_UNIDADE_CURTO[item.unidade as UnidadeServico] ?? item.unidade;
   return item.unidade;
 }
 

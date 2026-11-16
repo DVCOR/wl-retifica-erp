@@ -45,10 +45,16 @@ export function GradePrecos({ tabela, linhas }: Props) {
   const [valores, setValores] = React.useState<Map<string, number | null>>(inicial);
 
   // Quando o servidor devolve dados novos (após salvar), recomeça da base nova.
-  React.useEffect(() => setValores(inicial), [inicial]);
+  const [inicialAnterior, setInicialAnterior] = React.useState(inicial);
+  if (inicialAnterior !== inicial) {
+    setInicialAnterior(inicial);
+    setValores(inicial);
+  }
 
   const alteradas = linhas.filter(
-    (l) => (valores.get(chaveItem(l.tipo, l.id)) ?? null) !== (inicial.get(chaveItem(l.tipo, l.id)) ?? null),
+    (l) =>
+      (valores.get(chaveItem(l.tipo, l.id)) ?? null) !==
+      (inicial.get(chaveItem(l.tipo, l.id)) ?? null),
   );
 
   const visiveis = React.useMemo(() => {
@@ -56,7 +62,8 @@ export function GradePrecos({ tabela, linhas }: Props) {
     return linhas.filter(
       (l) =>
         l.tipo === aba &&
-        (termo === "" || normalizar(`${l.descricao} ${l.codigo ?? ""} ${l.grupo ?? ""}`).includes(termo)),
+        (termo === "" ||
+          normalizar(`${l.descricao} ${l.codigo ?? ""} ${l.grupo ?? ""}`).includes(termo)),
     );
   }, [linhas, aba, busca]);
 
@@ -82,7 +89,10 @@ export function GradePrecos({ tabela, linhas }: Props) {
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-[15px] text-texto-secundario">
-          Desconto padrão de <strong className="text-texto">{tabela.desconto_padrao_pct.toLocaleString("pt-BR")}%</strong>{" "}
+          Desconto padrão de{" "}
+          <strong className="text-texto">
+            {tabela.desconto_padrao_pct.toLocaleString("pt-BR")}%
+          </strong>{" "}
           sobre o preço base. Preencha &ldquo;Preço da tabela&rdquo; só nos itens com preço próprio.
         </p>
         {podeEditar && (
@@ -166,9 +176,7 @@ export function GradePrecos({ tabela, linhas }: Props) {
                       valor={especifico}
                       placeholder="usa desconto"
                       disabled={!podeEditar}
-                      onValorChange={(v) =>
-                        setValores((atual) => new Map(atual).set(chave, v))
-                      }
+                      onValorChange={(v) => setValores((atual) => new Map(atual).set(chave, v))}
                       className={mudou ? "border-primaria" : undefined}
                     />
                   </div>
@@ -178,7 +186,9 @@ export function GradePrecos({ tabela, linhas }: Props) {
                       <strong>{formatarMoeda(efetivo)}</strong>
                       {diff !== 0 && (
                         <span className="block text-xs text-texto-secundario">
-                          {diff > 0 ? `−${diff.toLocaleString("pt-BR")}%` : `+${Math.abs(diff).toLocaleString("pt-BR")}%`}
+                          {diff > 0
+                            ? `−${diff.toLocaleString("pt-BR")}%`
+                            : `+${Math.abs(diff).toLocaleString("pt-BR")}%`}
                         </span>
                       )}
                     </span>
@@ -209,9 +219,7 @@ export function GradePrecos({ tabela, linhas }: Props) {
         </div>
       )}
 
-      {editandoDados && (
-        <TabelaDialog tabela={tabela} onFechar={() => setEditandoDados(false)} />
-      )}
+      {editandoDados && <TabelaDialog tabela={tabela} onFechar={() => setEditandoDados(false)} />}
     </>
   );
 }

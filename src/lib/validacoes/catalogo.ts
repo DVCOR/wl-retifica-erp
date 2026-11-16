@@ -39,7 +39,11 @@ export type ServicoForm = z.input<typeof servicoSchema>;
 
 export const pecaSchema = z.object({
   codigo: textoOpcional(40),
-  descricao: z.string().trim().min(2, "Informe a descrição da peça").max(160, "Use até 160 caracteres"),
+  descricao: z
+    .string()
+    .trim()
+    .min(2, "Informe a descrição da peça")
+    .max(160, "Use até 160 caracteres"),
   marca: textoOpcional(60),
   unidade: z.string().trim().min(1, "Informe a unidade").max(10, "Use até 10 caracteres"),
   custo: moedaOpcional,

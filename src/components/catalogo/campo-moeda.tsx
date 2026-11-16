@@ -19,7 +19,13 @@ type CampoMoedaProps = Omit<
  * "12,50"; "125000" mostra "1.250,00". Aceita só dígitos (teclado numérico no
  * celular), backspace apaga o último dígito. Padrão único do módulo Catálogo.
  */
-export function CampoMoeda({ valor, onValorChange, className, placeholder, ...props }: CampoMoedaProps) {
+export function CampoMoeda({
+  valor,
+  onValorChange,
+  className,
+  placeholder,
+  ...props
+}: CampoMoedaProps) {
   return (
     <div className="relative">
       <span

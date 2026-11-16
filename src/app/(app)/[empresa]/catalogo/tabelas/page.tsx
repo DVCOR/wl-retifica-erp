@@ -18,7 +18,10 @@ export default async function Pagina({ params }: PageProps<"/[empresa]/catalogo/
   const tabelas = await listarTabelasPreco(empresa.id);
   return (
     <>
-      <PageHeader titulo="Catálogo e preços" descricao="Serviços, peças, tabelas de preço e kits." />
+      <PageHeader
+        titulo="Catálogo e preços"
+        descricao="Serviços, peças, tabelas de preço e kits."
+      />
       <AbasCatalogo />
       <TabelasLista tabelas={tabelas} />
     </>

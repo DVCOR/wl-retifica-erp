@@ -100,11 +100,17 @@ export function PecasLista({ pecas }: { pecas: PecaLista[] }) {
             onMostrarInativosChange={setInativos}
           />
           {filtradas.length === 0 ? (
-            <EmptyState titulo="Nada encontrado" descricao="Ajuste a busca ou mostre as inativas." />
+            <EmptyState
+              titulo="Nada encontrado"
+              descricao="Ajuste a busca ou mostre as inativas."
+            />
           ) : (
             <Card className="gap-0 divide-y divide-borda py-0">
               {filtradas.map((p) => (
-                <div key={p.id} className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5">
+                <div
+                  key={p.id}
+                  className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5"
+                >
                   <div className="min-w-0 flex-1 basis-56">
                     <p className={p.ativo ? "font-medium" : "font-medium text-texto-secundario"}>
                       {p.descricao}
@@ -198,10 +204,16 @@ function PecaDialog({ peca, onFechar }: { peca: PecaLista | null; onFechar: () =
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{peca ? "Editar peça" : "Nova peça"}</DialogTitle>
-          <DialogDescription>O custo é interno; o cliente só vê o preço de venda.</DialogDescription>
+          <DialogDescription>
+            O custo é interno; o cliente só vê o preço de venda.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-2" noValidate>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid gap-4 sm:grid-cols-2"
+            noValidate
+          >
             <FormField
               control={form.control}
               name="descricao"

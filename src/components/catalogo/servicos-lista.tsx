@@ -102,7 +102,9 @@ export function ServicosLista({ servicos }: { servicos: ServicoLista[] }) {
     <>
       <div className="mb-4 flex items-center justify-between gap-3">
         <p className="text-[15px] text-texto-secundario">
-          {vePrecos ? "Preços base; as tabelas aplicam desconto ou preço próprio." : "Lista sem preços."}
+          {vePrecos
+            ? "Preços base; as tabelas aplicam desconto ou preço próprio."
+            : "Lista sem preços."}
         </p>
         {podeEditar && (
           <Button onClick={() => setEditando("novo")}>
@@ -135,7 +137,10 @@ export function ServicosLista({ servicos }: { servicos: ServicoLista[] }) {
             onMostrarInativosChange={setInativos}
           />
           {grupos.length === 0 ? (
-            <EmptyState titulo="Nada encontrado" descricao="Ajuste a busca ou mostre os inativos." />
+            <EmptyState
+              titulo="Nada encontrado"
+              descricao="Ajuste a busca ou mostre os inativos."
+            />
           ) : (
             <div className="grid gap-4">
               {grupos.map(([categoria, itens]) => (
@@ -146,14 +151,18 @@ export function ServicosLista({ servicos }: { servicos: ServicoLista[] }) {
                   >
                     {categoria} <span className="font-normal">({itens.length})</span>
                   </h2>
-                  <Card className="divide-y divide-borda gap-0 py-0">
+                  <Card className="gap-0 divide-y divide-borda py-0">
                     {itens.map((s) => (
                       <div
                         key={s.id}
                         className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5"
                       >
                         <div className="min-w-0 flex-1 basis-56">
-                          <p className={s.ativo ? "font-medium" : "font-medium text-texto-secundario"}>
+                          <p
+                            className={
+                              s.ativo ? "font-medium" : "font-medium text-texto-secundario"
+                            }
+                          >
                             {s.nome}
                             {!s.ativo && (
                               <Badge variant="contorno" className="ml-2">
@@ -162,8 +171,9 @@ export function ServicosLista({ servicos }: { servicos: ServicoLista[] }) {
                             )}
                           </p>
                           <p className="text-sm text-texto-secundario">
-                            {[s.codigo, formatarTempo(s.tempo_padrao_min)].filter(Boolean).join(" · ") ||
-                              "—"}
+                            {[s.codigo, formatarTempo(s.tempo_padrao_min)]
+                              .filter(Boolean)
+                              .join(" · ") || "—"}
                           </p>
                         </div>
                         <Badge variant="neutro">{ROTULO_UNIDADE[s.unidade]}</Badge>
@@ -258,10 +268,16 @@ function ServicoDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{servico ? "Editar serviço" : "Novo serviço"}</DialogTitle>
-          <DialogDescription>Preço base e tempo padrão servem de partida para os orçamentos.</DialogDescription>
+          <DialogDescription>
+            Preço base e tempo padrão servem de partida para os orçamentos.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 sm:grid-cols-2" noValidate>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="grid gap-4 sm:grid-cols-2"
+            noValidate
+          >
             <FormField
               control={form.control}
               name="nome"

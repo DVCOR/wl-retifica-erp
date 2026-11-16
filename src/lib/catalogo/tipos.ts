@@ -68,12 +68,3 @@ export type KitLista = {
   itens: ItemKit[];
   total: number | null;
 };
-
-export type OpcaoCatalogo = {
-  tipo: "servico" | "peca";
-  id: string;
-  descricao: string;
-  unidade: string;
-  /** Preço efetivo na tabela usada para estimar. */
-  preco: number | null;
-};

@@ -33,7 +33,10 @@ export type ParametrosBusca = {
 
 /** Remove caracteres que quebram o filtro `or()` do PostgREST e os curingas do LIKE. */
 export function sanitizarTermo(termo: string): string {
-  return termo.replace(/[%,()*\\_:"']/g, " ").replace(/\s+/g, " ").trim();
+  return termo
+    .replace(/[%,()*\\_:"']/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export async function buscarItensCatalogo(
@@ -55,7 +58,10 @@ export async function buscarItensCatalogo(
   // Preços específicos dos itens encontrados na tabela escolhida.
   const especificos = new Map<string, number>();
   if (p.vePrecos && p.tabelaPrecoId) {
-    const idsServico = [...servicos.map((s) => s.id), ...kits.flatMap((k) => k.itens.map((i) => i.id))];
+    const idsServico = [
+      ...servicos.map((s) => s.id),
+      ...kits.flatMap((k) => k.itens.map((i) => i.id)),
+    ];
     const idsPeca = [...pecas.map((x) => x.id), ...kits.flatMap((k) => k.itens.map((i) => i.id))];
     if (idsServico.length > 0) {
       const { data } = await supabase
@@ -164,7 +170,9 @@ async function buscarServicos(
     .order("nome")
     .limit(limite);
   return (data ?? []).flatMap((s) =>
-    s.id && s.nome && s.unidade ? [{ ...s, id: s.id, nome: s.nome, unidade: s.unidade, base: null }] : [],
+    s.id && s.nome && s.unidade
+      ? [{ ...s, id: s.id, nome: s.nome, unidade: s.unidade, base: null }]
+      : [],
   );
 }
 
@@ -243,8 +251,14 @@ async function buscarKits(
       })),
     }));
   }
-  const idsServico = [...new Set(kits.flatMap((k) => k.kit_itens.flatMap((i) => (i.servico_id ? [i.servico_id] : []))))];
-  const idsPeca = [...new Set(kits.flatMap((k) => k.kit_itens.flatMap((i) => (i.peca_id ? [i.peca_id] : []))))];
+  const idsServico = [
+    ...new Set(
+      kits.flatMap((k) => k.kit_itens.flatMap((i) => (i.servico_id ? [i.servico_id] : []))),
+    ),
+  ];
+  const idsPeca = [
+    ...new Set(kits.flatMap((k) => k.kit_itens.flatMap((i) => (i.peca_id ? [i.peca_id] : [])))),
+  ];
   const [s, x] = await Promise.all([
     idsServico.length
       ? supabase.from("servicos").select("id, preco_base").in("id", idsServico)
@@ -262,7 +276,12 @@ async function buscarKits(
     itens: k.kit_itens.map((i) => {
       const tipo = i.servico_id ? ("servico" as const) : ("peca" as const);
       const id = (i.servico_id ?? i.peca_id) as string;
-      return { tipo, id, quantidade: Number(i.quantidade), base: base.get(chaveItem(tipo, id)) ?? null };
+      return {
+        tipo,
+        id,
+        quantidade: Number(i.quantidade),
+        base: base.get(chaveItem(tipo, id)) ?? null,
+      };
     }),
   }));
 }

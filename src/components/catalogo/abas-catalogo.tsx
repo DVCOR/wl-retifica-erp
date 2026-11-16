@@ -23,7 +23,7 @@ export function AbasCatalogo() {
 
   return (
     <nav aria-label="Seções do catálogo" className="mb-4 border-b border-borda">
-      <ul className="flex gap-1 overflow-x-auto [scrollbar-width:none]">
+      <ul className="flex [scrollbar-width:none] gap-1 overflow-x-auto">
         {abas.map((a) => {
           const ativa = a.href === pathname;
           return (

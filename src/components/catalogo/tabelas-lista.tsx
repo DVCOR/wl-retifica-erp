@@ -14,7 +14,10 @@ import type { TabelaPrecoLista } from "@/lib/catalogo/tipos";
 import { alternarAtivoTabelaPreco } from "@/app/(app)/[empresa]/catalogo/actions";
 import { TabelaDialog } from "./tabela-dialog";
 
-const ROTULO_PADRAO = { lojista: "Padrão dos lojistas", final: "Padrão dos clientes finais" } as const;
+const ROTULO_PADRAO = {
+  lojista: "Padrão dos lojistas",
+  final: "Padrão dos clientes finais",
+} as const;
 
 function textoClientes(t: TabelaPrecoLista): string {
   const total = t.clientes_explicitos + t.clientes_por_padrao;
@@ -80,7 +83,9 @@ export function TabelasLista({ tabelas }: { tabelas: TabelaPrecoLista[] }) {
                     <div className="min-w-0">
                       <h2 className="truncate text-lg font-semibold">{t.nome}</h2>
                       <div className="mt-1 flex flex-wrap gap-1.5">
-                        {t.padrao_para && <Badge variant="primaria">{ROTULO_PADRAO[t.padrao_para]}</Badge>}
+                        {t.padrao_para && (
+                          <Badge variant="primaria">{ROTULO_PADRAO[t.padrao_para]}</Badge>
+                        )}
                         {!t.ativo && <Badge variant="contorno">Inativa</Badge>}
                       </div>
                     </div>
@@ -109,7 +114,9 @@ export function TabelasLista({ tabelas }: { tabelas: TabelaPrecoLista[] }) {
                   </dl>
                   <div className="flex flex-wrap gap-2">
                     <Button asChild variant="secondary">
-                      <Link href={`${base}/${t.id}`}>{podeEditar ? "Editar preços" : "Ver preços"}</Link>
+                      <Link href={`${base}/${t.id}`}>
+                        {podeEditar ? "Editar preços" : "Ver preços"}
+                      </Link>
                     </Button>
                     {podeEditar && (
                       <>

@@ -5,7 +5,6 @@ import type {
   ItemKit,
   KitLista,
   LinhaPrecoTabela,
-  OpcaoCatalogo,
   PecaLista,
   ServicoLista,
   TabelaPrecoLista,
@@ -20,7 +19,10 @@ import type {
 const num = (v: number | string | null | undefined): number | null =>
   v === null || v === undefined ? null : Number(v);
 
-export async function listarServicos(empresaId: string, vePrecos: boolean): Promise<ServicoLista[]> {
+export async function listarServicos(
+  empresaId: string,
+  vePrecos: boolean,
+): Promise<ServicoLista[]> {
   const supabase = await criarClienteServidor();
   if (vePrecos) {
     const { data, error } = await supabase
@@ -219,9 +221,9 @@ export async function listarLinhasPrecoTabela(
 }
 
 /** Tabela usada para estimar kits: padrão para cliente final, senão lojista, senão nenhuma. */
-export function escolherTabelaEstimativa<T extends { id: string; padrao_para: string | null; ativo: boolean }>(
-  tabelas: readonly T[],
-): T | null {
+export function escolherTabelaEstimativa<
+  T extends { id: string; padrao_para: string | null; ativo: boolean },
+>(tabelas: readonly T[]): T | null {
   const ativas = tabelas.filter((t) => t.ativo);
   return (
     ativas.find((t) => t.padrao_para === "final") ??
@@ -272,19 +274,32 @@ export async function listarKits(
   const [servicos, pecas, tabelaPrecos] = await Promise.all([
     idsServico.size
       ? opcoes.vePrecos
-        ? supabase.from("servicos").select("id, nome, unidade, preco_base").in("id", [...idsServico])
-        : supabase.from("v_servicos_catalogo").select("id, nome, unidade").in("id", [...idsServico])
+        ? supabase
+            .from("servicos")
+            .select("id, nome, unidade, preco_base")
+            .in("id", [...idsServico])
+        : supabase
+            .from("v_servicos_catalogo")
+            .select("id, nome, unidade")
+            .in("id", [...idsServico])
       : Promise.resolve({ data: [], error: null }),
     idsPeca.size
       ? opcoes.vePrecos
-        ? supabase.from("pecas").select("id, descricao, unidade, preco_venda").in("id", [...idsPeca])
-        : supabase.from("v_pecas_catalogo").select("id, descricao, unidade").in("id", [...idsPeca])
+        ? supabase
+            .from("pecas")
+            .select("id, descricao, unidade, preco_venda")
+            .in("id", [...idsPeca])
+        : supabase
+            .from("v_pecas_catalogo")
+            .select("id, descricao, unidade")
+            .in("id", [...idsPeca])
       : Promise.resolve({ data: [], error: null }),
     opcoes.vePrecos && opcoes.tabelaId
       ? carregarPrecosTabela(empresaId, opcoes.tabelaId)
       : Promise.resolve({ desconto: 0, especificos: new Map<string, number>() }),
   ]);
-  if (servicos.error) throw new Error(`Erro ao carregar serviços do kit: ${servicos.error.message}`);
+  if (servicos.error)
+    throw new Error(`Erro ao carregar serviços do kit: ${servicos.error.message}`);
   if (pecas.error) throw new Error(`Erro ao carregar peças do kit: ${pecas.error.message}`);
 
   type Info = { descricao: string; unidade: string; base: number | null };
@@ -368,44 +383,21 @@ async function carregarPrecosTabela(empresaId: string, tabelaId: string) {
   return { desconto: Number(tabela.data?.desconto_padrao_pct ?? 0), especificos };
 }
 
-/** Itens ativos do catálogo (serviços e peças) para o editor de kits, com preço efetivo na tabela. */
-export async function listarOpcoesCatalogo(
-  empresaId: string,
-  opcoes: { vePrecos: boolean; tabelaId?: string | null },
-): Promise<OpcaoCatalogo[]> {
-  const [servicos, pecas, tabela] = await Promise.all([
-    listarServicos(empresaId, opcoes.vePrecos),
-    listarPecas(empresaId, opcoes.vePrecos),
-    opcoes.vePrecos && opcoes.tabelaId
-      ? carregarPrecosTabela(empresaId, opcoes.tabelaId)
-      : Promise.resolve({ desconto: 0, especificos: new Map<string, number>() }),
-  ]);
-  const calc = (tipo: "servico" | "peca", id: string, base: number | null) =>
-    base === null
-      ? null
-      : precoEfetivo({
-          precoBase: base,
-          descontoPct: tabela.desconto,
-          precoEspecifico: tabela.especificos.get(chaveItem(tipo, id)) ?? null,
-        });
-  return [
-    ...servicos
-      .filter((s) => s.ativo)
-      .map<OpcaoCatalogo>((s) => ({
-        tipo: "servico",
-        id: s.id,
-        descricao: s.nome,
-        unidade: s.unidade,
-        preco: calc("servico", s.id, s.preco_base),
-      })),
-    ...pecas
-      .filter((p) => p.ativo)
-      .map<OpcaoCatalogo>((p) => ({
-        tipo: "peca",
-        id: p.id,
-        descricao: p.descricao,
-        unidade: p.unidade,
-        preco: calc("peca", p.id, p.preco_venda),
-      })),
-  ];
+export type TabelaResumo = {
+  id: string;
+  nome: string;
+  padrao_para: "lojista" | "final" | null;
+  ativo: boolean;
+};
+
+/** Tabelas de preço sem contagens (para seletores). */
+export async function listarTabelasResumo(empresaId: string): Promise<TabelaResumo[]> {
+  const supabase = await criarClienteServidor();
+  const { data, error } = await supabase
+    .from("tabelas_preco")
+    .select("id, nome, padrao_para, ativo")
+    .eq("empresa_id", empresaId)
+    .order("nome");
+  if (error) throw new Error(`Erro ao listar tabelas de preço: ${error.message}`);
+  return data ?? [];
 }

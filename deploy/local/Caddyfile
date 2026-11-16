@@ -1,0 +1,54 @@
+# =============================================================================
+# Caddy: HTTPS na rede da oficina (sem internet) com a CA interna do Caddy.
+# Tudo numa origem só (https://WL_HOST):
+#   /auth/v1, /rest/v1, /storage/v1, /realtime/v1, /graphql/v1 -> Kong (Supabase)
+#   todo o resto                                              -> app (Next.js)
+# WL_ENDERECOS vem do .env (ex.: "wl.local, 192.168.0.10, localhost").
+# Certificado raiz para instalar nos aparelhos: http://<endereço>/certificado
+# =============================================================================
+{
+	# Sem ACME/Let's Encrypt: todos os sites usam a CA local.
+	local_certs
+	# O container não tem onde instalar a CA; instalamos nos aparelhos.
+	skip_install_trust
+}
+
+# HTTP: só entrega o certificado raiz; o resto vai para HTTPS.
+http:// {
+	handle /certificado* {
+		root * /data/caddy/pki/authorities/local
+		rewrite * /root.crt
+		header Content-Type application/x-x509-ca-cert
+		header Content-Disposition "attachment; filename=\"wl-retifica-certificado.crt\""
+		file_server
+	}
+	handle {
+		redir https://{host}{uri} 302
+	}
+}
+
+{$WL_ENDERECOS} {
+	tls internal
+
+	# O certificado também pelo HTTPS (para quem já confia).
+	handle /certificado* {
+		root * /data/caddy/pki/authorities/local
+		rewrite * /root.crt
+		header Content-Type application/x-x509-ca-cert
+		header Content-Disposition "attachment; filename=\"wl-retifica-certificado.crt\""
+		file_server
+	}
+
+	@supabase path /auth/v1/* /rest/v1/* /storage/v1/* /realtime/v1/* /graphql/v1/*
+	handle @supabase {
+		reverse_proxy kong:8000
+	}
+
+	handle {
+		# Os arquivos do Next têm o endereço embutido (trocado ao subir o
+		# container); revalidar evita aparelho preso a um endereço antigo.
+		header /_next/static/* >Cache-Control "no-cache"
+		encode zstd gzip
+		reverse_proxy app:3000
+	}
+}

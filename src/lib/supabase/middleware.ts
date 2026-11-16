@@ -1,7 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "./types";
-import { SUPABASE_ANON_KEY, SUPABASE_URL, supabaseConfigurado } from "@/lib/env";
+import {
+  COOKIE_SESSAO,
+  SUPABASE_ANON_KEY,
+  SUPABASE_URL_SERVIDOR,
+  supabaseConfigurado,
+} from "@/lib/env";
 import { COOKIE_EMPRESA, ehRotaPublica, slugDaRota } from "@/lib/auth/rotas";
 
 /**
@@ -17,7 +22,8 @@ export async function atualizarSessao(request: NextRequest) {
     return response;
   }
 
-  const supabase = createServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  const supabase = createServerClient<Database>(SUPABASE_URL_SERVIDOR, SUPABASE_ANON_KEY, {
+    cookieOptions: { name: COOKIE_SESSAO },
     cookies: {
       getAll() {
         return request.cookies.getAll();

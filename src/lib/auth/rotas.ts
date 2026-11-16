@@ -5,6 +5,7 @@ export const COOKIE_EMPRESA = "wl_empresa";
 export const SEGMENTOS_RESERVADOS = new Set([
   "login",
   "convite",
+  "esqueci-senha",
   "auth",
   "os-publica",
   "sem-empresa",
@@ -12,7 +13,7 @@ export const SEGMENTOS_RESERVADOS = new Set([
   "_next",
 ]);
 
-const PREFIXOS_PUBLICOS = ["/login", "/convite/", "/auth/", "/os-publica/"];
+const PREFIXOS_PUBLICOS = ["/login", "/esqueci-senha", "/convite/", "/auth/", "/os-publica/"];
 
 export function ehRotaPublica(caminho: string): boolean {
   return PREFIXOS_PUBLICOS.some((p) => caminho === p.replace(/\/$/, "") || caminho.startsWith(p));

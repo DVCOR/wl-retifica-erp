@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { falha, falhaValidacao, sucesso, type ResultadoAcao } from "@/lib/acao";
 import { clienteAnonimo, tokenValido } from "@/lib/data/orcamento-publico";
+import { modoLocal } from "@/lib/modo";
 import { respostaPublicaSchema } from "@/lib/validacoes/orcamento";
 
 /** Aprovar/reprovar pelo link público. Grava nome, IP e user-agent (no banco). */
@@ -11,6 +12,7 @@ export async function responderPublicoAction(
   token: string,
   entrada: unknown,
 ): Promise<ResultadoAcao> {
+  if (modoLocal()) return falha("Link indisponível.");
   const dados = respostaPublicaSchema.safeParse(entrada);
   if (!dados.success) return falhaValidacao(dados.error);
   if (!tokenValido(token)) return falha("Link inválido.");

@@ -1,7 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { CheckCircle2, Copy, FileDown, Loader2, MessageCircle, RefreshCw, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Copy,
+  FileDown,
+  Loader2,
+  MessageCircle,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { BotaoVersao } from "@/components/orcamento/botao-versao";
 import { Button } from "@/components/ui/button";
@@ -16,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatarData } from "@/lib/format";
+import { modoLocal } from "@/lib/modo";
 import { montarMensagemOrcamento } from "@/lib/orcamento/mensagens";
 import type { StatusOrcamento } from "@/lib/orcamento/calculos";
 import { linkWhatsapp } from "@/lib/validacoes/clientes";
@@ -44,7 +53,10 @@ type Props = {
   temLaudo: boolean;
 };
 
-/** Pós-envio: link público, WhatsApp, PDF, registro da resposta e nova versão. */
+/**
+ * Pós-envio: link público, WhatsApp, PDF, registro da resposta e nova versão.
+ * Modo local (offline): sem link público; PDF + registro da resposta pelo balcão.
+ */
 export function EnvioOrcamento({
   slug,
   osId,
@@ -56,6 +68,7 @@ export function EnvioOrcamento({
   link: linkInicial,
   temLaudo,
 }: Props) {
+  const local = modoLocal();
   const [link, setLink] = React.useState(linkInicial);
   const [comLaudo, setComLaudo] = React.useState(temLaudo);
   const [pendente, executar] = React.useTransition();
@@ -67,7 +80,7 @@ export function EnvioOrcamento({
     empresa: empresaNome,
     total: orcamento.total,
     validade: orcamento.validade,
-    link,
+    link: local ? null : link,
   });
   const wa = linkWhatsapp(telefoneCliente, mensagem);
   const pdf = `/${slug}/os/${osId}/orcamento/pdf${comLaudo ? "?laudo=1" : ""}`;
@@ -82,17 +95,22 @@ export function EnvioOrcamento({
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-borda bg-superficie p-4" aria-label="Envio">
+    <section
+      className="space-y-4 rounded-xl border border-borda bg-superficie p-4"
+      aria-label="Envio"
+    >
       <header>
         <h2 className="text-lg font-bold">
           Versão {orcamento.versao} {rotuloEstado(orcamento.status)}
         </h2>
         {orcamento.validade && (
-          <p className="text-sm text-texto-secundario">Válido até {formatarData(orcamento.validade)}</p>
+          <p className="text-sm text-texto-secundario">
+            Válido até {formatarData(orcamento.validade)}
+          </p>
         )}
       </header>
 
-      {orcamento.status === "enviado" && (
+      {orcamento.status === "enviado" && !local && (
         <>
           <div className="space-y-1">
             <Label htmlFor="link-publico">Link para o cliente (sem login)</Label>
@@ -138,10 +156,21 @@ export function EnvioOrcamento({
 
       <div className="flex flex-col gap-2 border-t border-borda pt-3 sm:flex-row sm:items-center">
         <Button asChild variant="secondary">
-          <a href={pdf} target="_blank" rel="noopener noreferrer">
-            <FileDown aria-hidden /> PDF do orçamento
+          <a
+            href={local ? `${pdf}${pdf.includes("?") ? "&" : "?"}baixar=1` : pdf}
+            target={local ? undefined : "_blank"}
+            rel="noopener noreferrer"
+          >
+            <FileDown aria-hidden /> {local ? "Baixar PDF" : "PDF do orçamento"}
           </a>
         </Button>
+        {local && orcamento.status === "enviado" && wa && (
+          <Button asChild variant="secondary">
+            <a href={wa} target="_blank" rel="noopener noreferrer">
+              <MessageCircle aria-hidden /> Abrir conversa no WhatsApp
+            </a>
+          </Button>
+        )}
         {temLaudo && (
           <label className="flex min-h-11 items-center gap-2 text-[15px]">
             <input
@@ -157,9 +186,13 @@ export function EnvioOrcamento({
 
       {orcamento.status === "enviado" && (
         <div className="space-y-2 border-t border-borda pt-3">
-          <p className="text-[15px] font-semibold">O cliente respondeu fora do link?</p>
+          <p className="text-[15px] font-semibold">
+            {local ? "Resposta do cliente" : "O cliente respondeu fora do link?"}
+          </p>
           <p className="text-sm text-texto-secundario">
-            Registre a aprovação ou reprovação combinada no balcão, por telefone ou WhatsApp.
+            {local
+              ? "Baixe o PDF e envie pelo WhatsApp do seu celular. Quando o cliente responder, registre aqui a aprovação ou reprovação combinada no balcão, por telefone ou WhatsApp."
+              : "Registre a aprovação ou reprovação combinada no balcão, por telefone ou WhatsApp."}
           </p>
           <div className="flex flex-col gap-2 sm:flex-row">
             <Button type="button" variant="secondary" onClick={() => setResponder(true)}>

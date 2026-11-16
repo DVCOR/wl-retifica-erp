@@ -13,7 +13,8 @@ export function montarMensagemRecebimento(dados: {
   numeroOs: string;
   empresa: string;
   qtdDivergencias: number;
-  linkOs: string;
+  /** Link público da OS. Em branco/ausente (modo local): mensagem sem link. */
+  linkOs?: string | null;
 }): string {
   const diverg =
     dados.qtdDivergencias === 0
@@ -24,7 +25,9 @@ export function montarMensagemRecebimento(dados: {
   return [
     `Olá, ${dados.nomeCliente}! Recebemos o seu motor na ${dados.empresa}.`,
     `OS ${dados.numeroOs}. ${diverg}`,
-    `Acompanhe pelo link: ${dados.linkOs}`,
+    dados.linkOs
+      ? `Acompanhe pelo link: ${dados.linkOs}`
+      : "Segue o comprovante de recebimento em PDF.",
   ].join("\n");
 }
 

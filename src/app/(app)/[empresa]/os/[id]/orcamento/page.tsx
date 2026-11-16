@@ -20,13 +20,12 @@ import {
 } from "@/lib/data/orcamento";
 import { SITE_URL } from "@/lib/env";
 import { formatarMoeda, formatarNumeroOs } from "@/lib/format";
+import { modoLocal } from "@/lib/modo";
 import { linkPublicoOs } from "@/lib/orcamento/mensagens";
 
 export const metadata: Metadata = { title: "Orçamento da OS" };
 
-export default async function OrcamentoPage({
-  params,
-}: PageProps<"/[empresa]/os/[id]/orcamento">) {
+export default async function OrcamentoPage({ params }: PageProps<"/[empresa]/os/[id]/orcamento">) {
   const { empresa: slug, id } = await params;
   const { empresa, membro } = await obterContextoEmpresa(slug);
   if (!pode(membro.papel, "orcamento.montar")) return <SemAcesso slug={slug} />;
@@ -41,7 +40,7 @@ export default async function OrcamentoPage({
   ]);
   const atual = versoes[0] ?? null;
   const itens = atual ? await listarItensOrcamento(empresa.id, atual.id) : [];
-  const link = linkPublicoOs(SITE_URL, os.token_publico);
+  const link = modoLocal() ? "" : linkPublicoOs(SITE_URL, os.token_publico);
   const numero = formatarNumeroOs(os.numero);
 
   return (
@@ -51,7 +50,11 @@ export default async function OrcamentoPage({
         titulo={
           <span className="flex flex-wrap items-center gap-3">
             Orçamento
-            {atual && <span className="text-base font-medium text-texto-secundario">versão {atual.versao}</span>}
+            {atual && (
+              <span className="text-base font-medium text-texto-secundario">
+                versão {atual.versao}
+              </span>
+            )}
             <StatusBadge status={os.status} />
           </span>
         }
@@ -90,7 +93,11 @@ export default async function OrcamentoPage({
           />
         ) : (
           <>
-            <ItensSomenteLeitura itens={itens} total={Number(atual.total)} desconto={Number(atual.desconto)} />
+            <ItensSomenteLeitura
+              itens={itens}
+              total={Number(atual.total)}
+              desconto={Number(atual.desconto)}
+            />
             <EnvioOrcamento
               slug={slug}
               osId={id}

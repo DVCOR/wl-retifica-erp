@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { z } from "zod";
+import { modoLocal } from "@/lib/modo";
 import { Button } from "@/components/ui/button";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { obterUsuario } from "@/lib/auth/sessao";
@@ -22,6 +23,8 @@ type InfoConvite = {
 };
 
 export default async function ConvitePage({ params }: PageProps<"/convite/[token]">) {
+  // Modo local: usuários são criados pelo dono; não há convite por e-mail.
+  if (modoLocal()) notFound();
   const { token } = await params;
   if (!z.string().uuid().safeParse(token).success) notFound();
 

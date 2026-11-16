@@ -29,6 +29,19 @@ describe("whatsapp", () => {
     expect(m).toContain("https://x/y");
   });
 
+  it("recebimento sem link (modo local) não cita link do sistema", () => {
+    const t = montarMensagemRecebimento({
+      nomeCliente: "Oficina A",
+      numeroOs: "2026-000152",
+      empresa: "WL",
+      qtdDivergencias: 0,
+      linkOs: null,
+    });
+    expect(t).not.toMatch(/https?:\/\//);
+    expect(t).not.toContain("Acompanhe pelo link");
+    expect(t).toContain("comprovante de recebimento em PDF");
+  });
+
   it("gera link wa.me com texto codificado, com ou sem telefone", () => {
     expect(linkWhatsapp("11999990000", "Olá & tudo")).toBe(
       "https://wa.me/5511999990000?text=Ol%C3%A1%20%26%20tudo",

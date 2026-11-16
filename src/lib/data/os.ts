@@ -1,7 +1,6 @@
 import "server-only";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { BUCKET_ANEXOS } from "@/lib/recebimento/armazenamento";
-import { MARCA_CONCLUIDO } from "@/lib/os/cronometro";
 import { descricaoMotor } from "@/lib/validacoes/motores";
 import type { OsStatus } from "@/lib/auth/permissoes";
 import type { CartaoOs } from "@/lib/os/quadro";
@@ -302,7 +301,7 @@ export async function obterExecucaoOs(
   const [itensRes, apRes, membrosRes] = await Promise.all([
     supabase
       .from("v_orcamento_itens_sem_preco")
-      .select("id, descricao, quantidade, ordem")
+      .select("id, descricao, quantidade, ordem, concluido_em")
       .eq("empresa_id", empresaId)
       .eq("os_id", osId)
       .eq("orcamento_status", "aprovado")
@@ -323,16 +322,11 @@ export async function obterExecucaoOs(
     ...a,
     membro_nome: nomes.get(a.membro_id) ?? null,
   }));
-  const concluidos = new Set(
-    apontamentos
-      .filter((a) => a.observacao === MARCA_CONCLUIDO && a.orcamento_item_id)
-      .map((a) => a.orcamento_item_id as string),
-  );
   const itens = (itensRes.data ?? []).map((i) => ({
     id: i.id as string,
     descricao: i.descricao as string,
     quantidade: Number(i.quantidade),
-    concluido: concluidos.has(i.id as string),
+    concluido: i.concluido_em !== null,
   }));
   return { itens, apontamentos };
 }

@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatarDataHora } from "@/lib/format";
-import { MARCA_CONCLUIDO, somarMs } from "@/lib/os/cronometro";
+import { somarMs } from "@/lib/os/cronometro";
 import type { ApontamentoView, ItemExecucao } from "@/lib/data/os";
 import {
   concluirItemAction,
@@ -51,9 +51,7 @@ export function ExecucaoOs({ slug, osId, membroId, itens, apontamentos, podeApon
       ) : (
         <ul className="divide-y divide-borda rounded-xl border border-borda bg-superficie">
           {itens.map((i) => {
-            const doItem = apontamentos.filter(
-              (a) => a.orcamento_item_id === i.id && a.observacao !== MARCA_CONCLUIDO,
-            );
+            const doItem = apontamentos.filter((a) => a.orcamento_item_id === i.id);
             const aberto = doItem.find((a) => a.fim === null && a.membro_id === membroId);
             const fechadosMs = somarMs(doItem.filter((a) => a.fim !== null), agora);
             return (
@@ -124,13 +122,11 @@ export function ExecucaoOs({ slug, osId, membroId, itens, apontamentos, podeApon
 
       <section aria-label="Apontamentos">
         <h3 className="mb-2 text-base font-semibold">Apontamentos</h3>
-        {apontamentos.filter((a) => a.observacao !== MARCA_CONCLUIDO).length === 0 ? (
+        {apontamentos.length === 0 ? (
           <p className="text-sm text-texto-secundario">Nenhum tempo apontado ainda.</p>
         ) : (
           <ul className="flex flex-col gap-1.5 text-sm">
-            {apontamentos
-              .filter((a) => a.observacao !== MARCA_CONCLUIDO)
-              .map((a) => (
+            {apontamentos.map((a) => (
                 <li key={a.id} className="flex flex-wrap justify-between gap-2 rounded-lg bg-superficie px-3 py-2">
                   <span>
                     {a.membro_nome ?? "—"} ·{" "}

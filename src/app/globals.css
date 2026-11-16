@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Tema WL Retífica. Use SEMPRE estes tokens (bg-primaria, text-texto-secundario,
+ * border-borda...) ou os aliases no estilo shadcn (bg-primary, text-muted-foreground...).
+ * Nunca hex soltos em componentes.
+ */
+@theme {
+  --color-preto: #0e0e10;
+  --color-preto-2: #1f2937;
+  --color-preto-borda: #374151;
+
+  --color-primaria: #c8102e;
+  --color-primaria-hover: #a10e25;
+  --color-primaria-suave: #fdecee;
+
+  --color-texto: #111827;
+  --color-texto-secundario: #4b5563;
+  --color-texto-claro: #d1d5db;
+  --color-fundo: #f3f4f6;
+  --color-superficie: #ffffff;
+  --color-borda: #e2e5ea;
+  --color-borda-forte: #d1d5db;
+
+  --color-sucesso: #15803d;
+  --color-sucesso-suave: #e7f6ec;
+  --color-alerta: #b45309;
+  --color-alerta-suave: #fef3c7;
+  --color-perigo: #b91c1c;
+  --color-perigo-suave: #fdecec;
+  --color-info: #1d4ed8;
+  --color-info-suave: #e8effe;
+  --color-roxo: #6d28d9;
+  --color-roxo-suave: #f1eafe;
+  --color-neutro: #374151;
+  --color-neutro-suave: #e5e7eb;
+
+  /* aliases no estilo shadcn/ui */
+  --color-background: var(--color-fundo);
+  --color-foreground: var(--color-texto);
+  --color-card: var(--color-superficie);
+  --color-card-foreground: var(--color-texto);
+  --color-popover: var(--color-superficie);
+  --color-popover-foreground: var(--color-texto);
+  --color-primary: var(--color-primaria);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--color-fundo);
+  --color-secondary-foreground: var(--color-texto);
+  --color-muted: var(--color-fundo);
+  --color-muted-foreground: var(--color-texto-secundario);
+  --color-accent: var(--color-primaria-suave);
+  --color-accent-foreground: var(--color-primaria-hover);
+  --color-destructive: var(--color-perigo);
+  --color-border: var(--color-borda);
+  --color-input: var(--color-borda-forte);
+  --color-ring: var(--color-primaria);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+
+  /* alvos de toque */
+  --spacing-toque: 44px;
+  --spacing-toque-bancada: 48px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--color-borda);
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background: var(--color-fundo);
+    color: var(--color-texto);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-primaria);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility numero-os {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
 }

@@ -5,15 +5,10 @@ import { revalidatePath } from "next/cache";
 import { falha, falhaValidacao, mensagemErroBanco, sucesso, type ResultadoAcao } from "@/lib/acao";
 import { pode } from "@/lib/auth/permissoes";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
-import { buscarClientesParaOs, listarMotoresDoCliente } from "@/lib/data/recebimento";
-import type { ClienteResumo, MotorResumo } from "@/lib/recebimento/tipos";
+import { obterClienteParaOs } from "@/lib/data/recebimento";
+import type { ClienteResumo } from "@/lib/recebimento/tipos";
 import { criarClienteServidor } from "@/lib/supabase/server";
-import {
-  buscaClienteSchema,
-  clienteRapidoSchema,
-  motorRapidoSchema,
-  novaOsSchema,
-} from "@/lib/validacoes/recebimento";
+import { novaOsSchema } from "@/lib/validacoes/recebimento";
 
 const slugSchema = z.string().min(1).max(80);
 
@@ -23,90 +18,21 @@ async function exigirAbrirOs(slug: string) {
   return ctx;
 }
 
-export async function buscarClientesAction(
-  slug: string,
-  termo: unknown,
-): Promise<ResultadoAcao<ClienteResumo[]>> {
-  const dados = buscaClienteSchema.safeParse({ termo });
-  if (!dados.success) return sucesso([]);
-  const ctx = await exigirAbrirOs(slug);
-  if (!ctx) return falha("Sem permissão para abrir OS.");
-  try {
-    return sucesso(await buscarClientesParaOs(ctx.empresa.id, dados.data.termo));
-  } catch {
-    return falha("Não foi possível buscar clientes. Tente de novo.");
-  }
-}
-
-export async function criarClienteRapidoAction(
-  slug: string,
-  entrada: unknown,
-): Promise<ResultadoAcao<ClienteResumo>> {
-  const dados = clienteRapidoSchema.safeParse(entrada);
-  if (!dados.success) return falhaValidacao(dados.error);
-  const ctx = await exigirAbrirOs(slug);
-  if (!ctx || !pode(ctx.membro.papel, "clientes.cadastrar")) return falha("Sem permissão.");
-  const supabase = await criarClienteServidor();
-  const { data, error } = await supabase
-    .from("clientes")
-    .insert({
-      empresa_id: ctx.empresa.id,
-      tipo: dados.data.tipo,
-      nome: dados.data.nome,
-      telefone_whatsapp: dados.data.telefone_whatsapp ?? null,
-      documento: dados.data.documento ?? null,
-    })
-    .select("id, nome, nome_fantasia, tipo, telefone_whatsapp, documento")
-    .single();
-  if (error) return falha(mensagemErroBanco(error));
-  revalidatePath(`/${slug}/clientes`);
-  return sucesso(data);
-}
-
-export async function listarMotoresDoClienteAction(
+/** Dados do cliente escolhido no `SeletorCliente` (tipo e telefone para o wizard). */
+export async function obterClienteParaOsAction(
   slug: string,
   clienteId: unknown,
-): Promise<ResultadoAcao<MotorResumo[]>> {
-  const id = z.string().uuid().safeParse(clienteId);
+): Promise<ResultadoAcao<ClienteResumo>> {
+  const id = z.uuid().safeParse(clienteId);
   if (!id.success) return falha("Cliente inválido.");
   const ctx = await exigirAbrirOs(slug);
   if (!ctx) return falha("Sem permissão para abrir OS.");
   try {
-    return sucesso(await listarMotoresDoCliente(ctx.empresa.id, id.data));
+    const cliente = await obterClienteParaOs(ctx.empresa.id, id.data);
+    return cliente ? sucesso(cliente) : falha("Cliente não encontrado.");
   } catch {
-    return falha("Não foi possível carregar os motores.");
+    return falha("Não foi possível carregar o cliente. Tente de novo.");
   }
-}
-
-export async function criarMotorRapidoAction(
-  slug: string,
-  entrada: unknown,
-): Promise<ResultadoAcao<MotorResumo>> {
-  const dados = motorRapidoSchema.safeParse(entrada);
-  if (!dados.success) return falhaValidacao(dados.error);
-  const ctx = await exigirAbrirOs(slug);
-  if (!ctx || !pode(ctx.membro.papel, "motores.editar")) return falha("Sem permissão.");
-  const supabase = await criarClienteServidor();
-  const { data, error } = await supabase
-    .from("motores")
-    .insert({
-      empresa_id: ctx.empresa.id,
-      cliente_id: dados.data.cliente_id,
-      marca: dados.data.marca ?? null,
-      modelo: dados.data.modelo ?? null,
-      codigo_motor: dados.data.codigo_motor ?? null,
-      numero_serie: dados.data.numero_serie ?? null,
-      combustivel: dados.data.combustivel ?? null,
-      cilindros: dados.data.cilindros ?? null,
-      cilindrada: dados.data.cilindrada ?? null,
-      valvulas_por_cilindro: dados.data.valvulas_por_cilindro ?? null,
-      veiculo_placa: dados.data.veiculo_placa ?? null,
-    })
-    .select("id, marca, modelo, codigo_motor, numero_serie, combustivel, cilindros, veiculo_placa")
-    .single();
-  if (error) return falha(mensagemErroBanco(error));
-  revalidatePath(`/${slug}/motores`);
-  return sucesso(data);
 }
 
 /** Cria a OS (rascunho em_recebimento, checklist copiado do template padrão). */

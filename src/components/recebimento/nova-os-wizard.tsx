@@ -10,12 +10,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatarTelefone } from "@/lib/format";
 import { dataLocalIso, somarDias } from "@/lib/recebimento/datas";
 import { resumoOs } from "@/lib/recebimento/rotulos";
-import type { ClienteResumo, MotorResumo } from "@/lib/recebimento/tipos";
+import type { ClienteResumo } from "@/lib/recebimento/tipos";
 import { novaOsSchema } from "@/lib/validacoes/recebimento";
-import { criarOsAction } from "@/app/(app)/[empresa]/os/nova/actions";
-import { ClienteBuscaRapida } from "./cliente-busca-rapida";
+import { criarOsAction, obterClienteParaOsAction } from "@/app/(app)/[empresa]/os/nova/actions";
+import { SeletorCliente } from "@/components/clientes/seletor-cliente";
+import { SeletorMotor, type MotorSelecionado } from "@/components/motores/seletor-motor";
 import type { EtapaId } from "./etapas";
-import { MotorBuscaRapida } from "./motor-busca-rapida";
 import { WizardCabecalho } from "./wizard-cabecalho";
 
 type NovaOsWizardProps = {
@@ -31,7 +31,7 @@ type NovaOsWizardProps = {
 export function NovaOsWizard({ slug, clienteInicial }: NovaOsWizardProps) {
   const router = useRouter();
   const [cliente, setCliente] = React.useState<ClienteResumo | null>(clienteInicial);
-  const [motor, setMotor] = React.useState<MotorResumo | null>(null);
+  const [motor, setMotor] = React.useState<MotorSelecionado | null>(null);
   const [motorDecidido, setMotorDecidido] = React.useState(false);
   const [prazo, setPrazo] = React.useState("");
   const [observacoes, setObservacoes] = React.useState("");
@@ -39,6 +39,7 @@ export function NovaOsWizard({ slug, clienteInicial }: NovaOsWizardProps) {
   const [carroPlaca, setCarroPlaca] = React.useState("");
   const [carroTelefone, setCarroTelefone] = React.useState("");
   const [criando, setCriando] = React.useState(false);
+  const [carregandoCliente, setCarregandoCliente] = React.useState(false);
   const [erro, setErro] = React.useState<string | null>(null);
   const [erros, setErros] = React.useState<Record<string, string>>({});
 
@@ -50,6 +51,20 @@ export function NovaOsWizard({ slug, clienteInicial }: NovaOsWizardProps) {
     setCliente(null);
     setMotor(null);
     setMotorDecidido(false);
+  }
+
+  /** O seletor devolve só id/nome: busca tipo e telefone para o resto do wizard. */
+  async function escolherCliente(escolhido: { id: string; nome: string } | null) {
+    if (!escolhido) return;
+    setErro(null);
+    setCarregandoCliente(true);
+    const r = await obterClienteParaOsAction(slug, escolhido.id);
+    setCarregandoCliente(false);
+    if (!r.ok) {
+      setErro(r.erro);
+      return;
+    }
+    setCliente(r.dados);
   }
 
   async function criar() {
@@ -99,7 +114,22 @@ export function NovaOsWizard({ slug, clienteInicial }: NovaOsWizardProps) {
 
       {!cliente && (
         <section className="rounded-xl border border-borda bg-superficie p-4 md:p-6">
-          <ClienteBuscaRapida slug={slug} aoSelecionar={setCliente} />
+          <h2 className="mb-3 text-base font-semibold text-texto">Cliente</h2>
+          {carregandoCliente ? (
+            <p
+              className="flex min-h-12 items-center gap-2 text-texto-secundario"
+              aria-live="polite"
+            >
+              <Loader2 className="size-4 animate-spin" aria-hidden /> Carregando cliente…
+            </p>
+          ) : (
+            <SeletorCliente id="nova-os-cliente" valor={null} onSelecionado={escolherCliente} />
+          )}
+          {erro && (
+            <p role="alert" className="mt-2 text-sm font-medium text-perigo">
+              {erro}
+            </p>
+          )}
         </section>
       )}
 
@@ -126,15 +156,32 @@ export function NovaOsWizard({ slug, clienteInicial }: NovaOsWizardProps) {
           </section>
 
           <section className="rounded-xl border border-borda bg-superficie p-4 md:p-6">
-            <MotorBuscaRapida
-              slug={slug}
+            <h3 className="mb-3 text-base font-semibold text-texto">Motor</h3>
+            <SeletorMotor
               clienteId={cliente.id}
-              selecionadoId={motor?.id ?? null}
-              aoSelecionar={(m) => {
+              clienteNome={cliente.nome}
+              valor={motor}
+              onSelecionado={(m) => {
                 setMotor(m);
                 setMotorDecidido(true);
               }}
+              onLimpar={() => {
+                setMotor(null);
+                setMotorDecidido(false);
+              }}
             />
+            {!motor && (
+              <Button
+                type="button"
+                variant={motorDecidido ? "outline" : "ghost"}
+                size="bancada"
+                className="mt-2 h-12 w-full"
+                aria-pressed={motorDecidido}
+                onClick={() => setMotorDecidido(true)}
+              >
+                {motorDecidido ? "Seguindo sem motor cadastrado" : "Seguir sem cadastrar motor"}
+              </Button>
+            )}
           </section>
 
           {lojista && (

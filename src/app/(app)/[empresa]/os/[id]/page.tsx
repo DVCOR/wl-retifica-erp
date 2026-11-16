@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 import { FileText, Printer } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
+import { ResumoLaudo } from "@/components/orcamento/resumo-laudo";
+import { ResumoOrcamento } from "@/components/orcamento/resumo-orcamento";
 import { StatusBadge } from "@/components/app/status-badge";
 import { AcoesStatus } from "@/components/os/acoes-os";
 import { AbrirOsGarantia, EntregarOs } from "@/components/os/entrega-os";
@@ -12,7 +14,7 @@ import { TrocaTecnico } from "@/components/os/troca-tecnico";
 import { UsarRealtime } from "@/components/os/usar-realtime";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { pode, podeVerPrecos } from "@/lib/auth/permissoes";
+import { pode } from "@/lib/auth/permissoes";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import {
   listarAnexosOs,
@@ -23,9 +25,8 @@ import {
   obterExecucaoOs,
   obterOsDetalhe,
   obterOsOrigem,
-  resumirOrcamentosOs,
 } from "@/lib/data/os";
-import { formatarData, formatarDataHora, formatarMoeda, formatarPlaca } from "@/lib/format";
+import { formatarData, formatarDataHora, formatarPlaca } from "@/lib/format";
 import { hojeSaoPaulo, rotuloPrazo, estaAtrasada } from "@/lib/os/quadro";
 import { STATUS_OS } from "@/lib/os/status";
 import { cn } from "@/lib/utils";
@@ -63,7 +64,6 @@ export default async function OsDetalhePage({
   if (!os) notFound();
 
   const papel = membro.papel;
-  const vePrecos = podeVerPrecos(papel, empresa.config);
   const abaParam = typeof sp.aba === "string" ? sp.aba : "resumo";
   const aba: Aba = ABAS.some(([k]) => k === abaParam) ? (abaParam as Aba) : "resumo";
   const hoje = hojeSaoPaulo();
@@ -279,27 +279,9 @@ export default async function OsDetalhePage({
 
       {aba === "checklist" && <AbaChecklist slug={slug} osId={id} status={os.status} empresaId={empresa.id} />}
 
-      {aba === "laudo" && (
-        <section className="rounded-xl border border-borda bg-superficie p-4">
-          <h2 className="mb-1 text-lg font-semibold">Laudo técnico e medições</h2>
-          <p className="mb-3 text-[15px] text-texto-secundario">
-            Medições, tolerâncias e conformidade registradas na análise.
-          </p>
-          <Button asChild>
-            <Link href={`${base}/laudo`}>Abrir laudo</Link>
-          </Button>
-        </section>
-      )}
+      {aba === "laudo" && <ResumoLaudo osId={id} slug={slug} />}
 
-      {aba === "orcamento" && (
-        <AbaOrcamento
-          base={base}
-          empresaId={empresa.id}
-          osId={id}
-          vePrecos={vePrecos}
-          podeMontar={pode(papel, "orcamento.montar")}
-        />
-      )}
+      {aba === "orcamento" && <ResumoOrcamento osId={id} slug={slug} />}
 
       {aba === "execucao" && (
         <AbaExecucao
@@ -353,48 +335,6 @@ async function AbaChecklist({
             </li>
           ))}
         </ul>
-      )}
-    </section>
-  );
-}
-
-async function AbaOrcamento({
-  base,
-  empresaId,
-  osId,
-  vePrecos,
-  podeMontar,
-}: {
-  base: string;
-  empresaId: string;
-  osId: string;
-  vePrecos: boolean;
-  podeMontar: boolean;
-}) {
-  const orcs = await resumirOrcamentosOs(empresaId, osId, vePrecos);
-  return (
-    <section className="rounded-xl border border-borda bg-superficie p-4">
-      <h2 className="mb-2 text-lg font-semibold">Orçamento</h2>
-      {!vePrecos ? (
-        <p className="mb-3 text-[15px] text-texto-secundario">Valores não disponíveis para o seu perfil.</p>
-      ) : orcs.length === 0 ? (
-        <p className="mb-3 text-[15px] text-texto-secundario">Nenhum orçamento criado ainda.</p>
-      ) : (
-        <ul className="mb-3 flex flex-col gap-1.5 text-[15px]">
-          {orcs.map((o) => (
-            <li key={o.versao} className="flex justify-between rounded-lg bg-fundo px-3 py-2">
-              <span>
-                Versão {o.versao} · <span className="capitalize">{o.status}</span>
-              </span>
-              <span className="font-semibold">{formatarMoeda(o.total)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      {(podeMontar || vePrecos) && (
-        <Button asChild>
-          <Link href={`${base}/orcamento`}>Abrir orçamento</Link>
-        </Button>
       )}
     </section>
   );

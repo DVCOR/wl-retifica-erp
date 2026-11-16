@@ -42,8 +42,6 @@ begin
     values (v_alfa, v_os, v_tec, v_item) returning id into v_ap;
   perform tests.ok(tests.linhas(format('update public.apontamentos set fim = now() + interval ''30 minutes'' where id = %L', v_ap)) = 1,
     'técnico pausa o próprio apontamento');
-  insert into public.apontamentos (empresa_id, os_id, membro_id, orcamento_item_id, inicio, fim, observacao)
-    values (v_alfa, v_os, v_tec, v_item, now(), now(), '[concluido]');
   perform tests.erro(format(
     'insert into public.apontamentos (empresa_id, os_id, membro_id) values (%L, %L, %L)',
     v_alfa, v_os, tests.membro('a_dono@t.local', 'alfa')), 'técnico não aponta por outro');

@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { podeMoverOs, type OsStatus } from "@/lib/auth/permissoes";
 import type { ApontamentoView, ItemExecucao } from "@/lib/data/os";
 import type { MedicaoBancada, OsBancada } from "@/lib/data/bancada";
-import { MARCA_CONCLUIDO, somarMs } from "@/lib/os/cronometro";
+import { somarMs } from "@/lib/os/cronometro";
 import { estaAtrasada, rotuloPrazo } from "@/lib/os/quadro";
 import { STATUS_OS } from "@/lib/os/status";
 import { comprimirImagem } from "@/lib/recebimento/compressao";
@@ -81,9 +81,7 @@ export function BancadaView({
   const itemAberto = aberto ? itens.find((i) => i.id === aberto.orcamento_item_id) : null;
   const baseMs = aberto
     ? somarMs(
-        apontamentos.filter(
-          (a) => a.orcamento_item_id === aberto.orcamento_item_id && a.fim !== null && a.observacao !== MARCA_CONCLUIDO,
-        ),
+        apontamentos.filter((a) => a.orcamento_item_id === aberto.orcamento_item_id && a.fim !== null),
         agora,
       )
     : 0;

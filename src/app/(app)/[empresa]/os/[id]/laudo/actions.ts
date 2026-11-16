@@ -3,9 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { falha, falhaValidacao, mensagemErroBanco, sucesso, type ResultadoAcao } from "@/lib/acao";
-import { pode, podeVerPrecos, type Acao } from "@/lib/auth/permissoes";
+import { pode, type Acao } from "@/lib/auth/permissoes";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
-import { obterRascunhoParaSugestao } from "@/lib/data/orcamento";
 import { calcularConformidade } from "@/lib/orcamento/medicao";
 import { caminhoPertenceAOs } from "@/lib/recebimento/armazenamento";
 import { criarClienteServidor } from "@/lib/supabase/server";
@@ -180,24 +179,12 @@ export async function sugerirItemAction(
   const ctx = await contexto(slug, osId, "orcamento.sugerir_itens");
   if (!ctx) return falha("Sem permissão.");
 
-  const podeLer = podeVerPrecos(ctx.membro.papel, ctx.empresa.config);
   const supabase = await criarClienteServidor();
-  const rasc = await obterRascunhoParaSugestao(ctx.empresa.id, osId, podeLer);
-  let orcamentoId = rasc.id;
-
-  if (!orcamentoId) {
-    if (rasc.ultimoStatus && rasc.ultimoStatus !== "rascunho")
-      return falha("O orçamento já foi enviado: peça ao balcão para criar uma nova versão.");
-    if (!pode(ctx.membro.papel, "orcamento.montar"))
-      return falha("O balcão ainda não abriu o orçamento desta OS. Avise o balcão e tente de novo.");
-    const { data, error } = await supabase
-      .from("orcamentos")
-      .insert({ empresa_id: ctx.empresa.id, os_id: osId, versao: 0 })
-      .select("id")
-      .single();
-    if (error) return falha(mensagemErroBanco(error));
-    orcamentoId = data.id;
-  }
+  // Devolve o rascunho vigente ou cria a próxima versão (recusa se já enviado).
+  const { data: orcamentoId, error: eRasc } = await supabase.rpc("orcamento_rascunho_para_sugestao", {
+    p_os_id: osId,
+  });
+  if (eRasc) return falha(mensagemErroBanco(eRasc));
 
   // Sem .select(): o técnico não pode ler a linha de volta.
   const { error } = await supabase.from("orcamento_itens").insert({

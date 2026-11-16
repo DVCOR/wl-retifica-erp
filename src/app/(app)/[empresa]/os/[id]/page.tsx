@@ -9,6 +9,7 @@ import { ResumoOrcamento } from "@/components/orcamento/resumo-orcamento";
 import { StatusBadge } from "@/components/app/status-badge";
 import { AcoesStatus } from "@/components/os/acoes-os";
 import { AbrirOsGarantia, EntregarOs } from "@/components/os/entrega-os";
+import { CorrigirChecklist } from "@/components/os/corrigir-checklist";
 import { ExecucaoOs } from "@/components/os/execucao-os";
 import { TrocaTecnico } from "@/components/os/troca-tecnico";
 import { UsarRealtime } from "@/components/os/usar-realtime";
@@ -277,7 +278,15 @@ export default async function OsDetalhePage({
         </div>
       )}
 
-      {aba === "checklist" && <AbaChecklist slug={slug} osId={id} status={os.status} empresaId={empresa.id} />}
+      {aba === "checklist" && (
+        <AbaChecklist
+          slug={slug}
+          osId={id}
+          status={os.status}
+          empresaId={empresa.id}
+          podeCorrigir={papel === "dono"}
+        />
+      )}
 
       {aba === "laudo" && <ResumoLaudo osId={id} slug={slug} />}
 
@@ -304,13 +313,16 @@ async function AbaChecklist({
   osId,
   status,
   empresaId,
+  podeCorrigir,
 }: {
   slug: string;
   osId: string;
   status: string;
   empresaId: string;
+  podeCorrigir: boolean;
 }) {
-  const { total, divergencias } = await listarDivergenciasChecklist(empresaId, osId);
+  const { total, itens, divergencias } = await listarDivergenciasChecklist(empresaId, osId);
+  const corrigivel = podeCorrigir && status !== "em_recebimento" && itens.length > 0;
   return (
     <section className="rounded-xl border border-borda bg-superficie p-4">
       <h2 className="mb-1 text-lg font-semibold">Checklist de recebimento</h2>
@@ -324,17 +336,28 @@ async function AbaChecklist({
       )}
       {divergencias.length > 0 && (
         <ul className="flex flex-col gap-2">
-          {divergencias.map((d, i) => (
-            <li key={i} className="rounded-lg bg-alerta-suave p-3 text-[15px]">
-              <span className="font-semibold">{d.descricao}</span>{" "}
-              <span className="text-texto-secundario">
-                ({d.grupo}) · {ROTULO_CHECK[d.status] ?? d.status}
-                {d.quantidade !== null && ` · qtd ${d.quantidade}`}
-              </span>
-              {d.observacao && <div className="text-sm">{d.observacao}</div>}
+          {divergencias.map((d) => (
+            <li
+              key={d.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-alerta-suave p-3 text-[15px]"
+            >
+              <div>
+                <span className="font-semibold">{d.descricao}</span>{" "}
+                <span className="text-texto-secundario">
+                  ({d.grupo}) · {ROTULO_CHECK[d.status] ?? d.status}
+                  {d.quantidade !== null && ` · qtd ${d.quantidade}`}
+                </span>
+                {d.observacao && <div className="text-sm">{d.observacao}</div>}
+              </div>
+              {corrigivel && <CorrigirChecklist slug={slug} osId={osId} itens={itens} itemId={d.id} />}
             </li>
           ))}
         </ul>
+      )}
+      {corrigivel && (
+        <div className="mt-3">
+          <CorrigirChecklist slug={slug} osId={osId} itens={itens} rotulo="Corrigir outro item" />
+        </div>
       )}
     </section>
   );

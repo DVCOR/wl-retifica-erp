@@ -147,39 +147,6 @@ export async function listarMedicoes(empresaId: string, osId: string): Promise<M
   }));
 }
 
-/**
- * Orçamento em rascunho onde o técnico pode sugerir itens. O técnico não lê
- * `orcamentos`; só enxerga a view sem preço (que só traz orçamentos com itens).
- */
-export async function obterRascunhoParaSugestao(
-  empresaId: string,
-  osId: string,
-  podeLerOrcamentos: boolean,
-): Promise<{ id: string | null; ultimoStatus: OrcamentoRow["status"] | null }> {
-  const supabase = await criarClienteServidor();
-  if (podeLerOrcamentos) {
-    const { data } = await supabase
-      .from("orcamentos")
-      .select("id, status")
-      .eq("empresa_id", empresaId)
-      .eq("os_id", osId)
-      .order("versao", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    return { id: data?.status === "rascunho" ? data.id : null, ultimoStatus: data?.status ?? null };
-  }
-  const { data } = await supabase
-    .from("v_orcamento_itens_sem_preco")
-    .select("orcamento_id, versao, orcamento_status")
-    .eq("empresa_id", empresaId)
-    .eq("os_id", osId)
-    .order("versao", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const status = data?.orcamento_status ?? null;
-  return { id: status === "rascunho" ? (data?.orcamento_id ?? null) : null, ultimoStatus: status };
-}
-
 export type ResumoOrcamento = {
   versao: number;
   status: OrcamentoRow["status"];

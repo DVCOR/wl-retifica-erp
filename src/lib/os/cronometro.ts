@@ -17,6 +17,3 @@ export function somarMs(apontamentos: ApontamentoSimples[], agora: number): numb
     return acc + Math.max(0, fim - ini);
   }, 0);
 }
-
-/** Marcador gravado em `apontamentos.observacao` para dar o item como concluído. */
-export const MARCA_CONCLUIDO = "[concluido]";

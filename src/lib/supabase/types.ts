@@ -723,6 +723,8 @@ export type Database = {
       };
       orcamento_itens: {
         Row: {
+          concluido_em: string | null;
+          concluido_por: string | null;
           created_at: string;
           desconto: number;
           descricao: string;
@@ -742,6 +744,8 @@ export type Database = {
         };
         ComputedFields: never;
         Insert: {
+          concluido_em?: string | null;
+          concluido_por?: string | null;
           created_at?: string;
           desconto?: number;
           descricao: string;
@@ -760,6 +764,8 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          concluido_em?: string | null;
+          concluido_por?: string | null;
           created_at?: string;
           desconto?: number;
           descricao?: string;
@@ -778,6 +784,13 @@ export type Database = {
           updated_at?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: "orcamento_itens_concluido_por_fk";
+            columns: ["concluido_por", "empresa_id"];
+            isOneToOne: false;
+            referencedRelation: "membros";
+            referencedColumns: ["id", "empresa_id"];
+          },
           {
             foreignKeyName: "orcamento_itens_empresa_id_fkey";
             columns: ["empresa_id"];
@@ -1664,6 +1677,8 @@ export type Database = {
     Views: {
       v_orcamento_itens_sem_preco: {
         Row: {
+          concluido_em: string | null;
+          concluido_por: string | null;
           descricao: string;
           empresa_id: string;
           id: string;
@@ -1681,6 +1696,13 @@ export type Database = {
         };
         ComputedFields: never;
         Relationships: [
+          {
+            foreignKeyName: "orcamento_itens_concluido_por_fk";
+            columns: ["concluido_por", "empresa_id"];
+            isOneToOne: false;
+            referencedRelation: "membros";
+            referencedColumns: ["id", "empresa_id"];
+          },
           {
             foreignKeyName: "orcamento_itens_empresa_id_fkey";
             columns: ["empresa_id"];
@@ -2139,8 +2161,13 @@ export type Database = {
           veiculo_placa: string;
         }[];
       };
+      marcar_item_concluido: {
+        Args: { p_concluido: boolean; p_item_id: string };
+        Returns: undefined;
+      };
       membro_atual: { Args: { p_empresa_id: string }; Returns: string };
       normalizar_busca: { Args: { texto: string }; Returns: string };
+      orcamento_rascunho_para_sugestao: { Args: { p_os_id: string }; Returns: string };
       os_papeis_para_status: {
         Args: { p_para: Database["public"]["Enums"]["os_status"] };
         Returns: Database["public"]["Enums"]["papel"][];
@@ -2155,6 +2182,7 @@ export type Database = {
         Returns: {
           etapa: Database["public"]["Enums"]["anexo_etapa"];
           legenda: string;
+          medicao_id: string;
           storage_path: string;
         }[];
       };

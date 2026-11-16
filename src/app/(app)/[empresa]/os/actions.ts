@@ -7,12 +7,12 @@ import { falha, falhaValidacao, mensagemErroBanco, sucesso, type ResultadoAcao }
 import { pode } from "@/lib/auth/permissoes";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { caminhoPertenceAOs } from "@/lib/recebimento/armazenamento";
-import { MARCA_CONCLUIDO } from "@/lib/os/cronometro";
 import { hojeSaoPaulo } from "@/lib/os/quadro";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import {
   alterarStatusSchema,
   cancelarSchema,
+  corrigirChecklistSchema,
   entregaSchema,
   fotoExecucaoSchema,
   garantiaOsSchema,
@@ -170,9 +170,8 @@ export async function pausarApontamentoAction(
 }
 
 /**
- * Marca/desmarca um serviço como concluído. Sem coluna própria no banco, grava um
- * apontamento de duração zero com observação MARCA_CONCLUIDO (desmarcar o troca
- * por "[reaberto]", pois técnico não pode apagar apontamentos).
+ * Marca/desmarca um serviço como concluído (`marcar_item_concluido`: OS em
+ * execução/aguardando peça). Ao concluir, encerra o cronômetro aberto do item.
  */
 export async function concluirItemAction(
   slug: string,
@@ -184,37 +183,23 @@ export async function concluirItemAction(
   const ctx = await contextoApontamento(slug, osId);
   if (!ctx) return falha("Sem permissão.");
   const supabase = await criarClienteServidor();
-  const agora = new Date().toISOString();
   if (dados.data.concluido) {
     // encerra o cronômetro aberto deste item, se houver
-    await supabase
+    const { error: e1 } = await supabase
       .from("apontamentos")
-      .update({ fim: agora })
+      .update({ fim: new Date().toISOString() })
       .eq("empresa_id", ctx.empresa.id)
       .eq("os_id", osId)
       .eq("orcamento_item_id", dados.data.orcamento_item_id)
       .eq("membro_id", ctx.membro.id)
       .is("fim", null);
-    const { error } = await supabase.from("apontamentos").insert({
-      empresa_id: ctx.empresa.id,
-      os_id: osId,
-      membro_id: ctx.membro.id,
-      orcamento_item_id: dados.data.orcamento_item_id,
-      inicio: agora,
-      fim: agora,
-      observacao: MARCA_CONCLUIDO,
-    });
-    if (error) return falha(mensagemErroBanco(error));
-  } else {
-    const { error } = await supabase
-      .from("apontamentos")
-      .update({ observacao: "[reaberto]" })
-      .eq("empresa_id", ctx.empresa.id)
-      .eq("os_id", osId)
-      .eq("orcamento_item_id", dados.data.orcamento_item_id)
-      .eq("observacao", MARCA_CONCLUIDO);
-    if (error) return falha(mensagemErroBanco(error));
+    if (e1) return falha(mensagemErroBanco(e1));
   }
+  const { error } = await supabase.rpc("marcar_item_concluido", {
+    p_item_id: dados.data.orcamento_item_id,
+    p_concluido: dados.data.concluido,
+  });
+  if (error) return falha(mensagemErroBanco(error));
   revalidar(slug, osId);
   return sucesso();
 }
@@ -359,4 +344,30 @@ export async function criarOsGarantiaAction(
   if (error) return falha(mensagemErroBanco(error));
   revalidar(slug, osId);
   return sucesso({ id: data.id });
+}
+
+// ------------------------------------------------------------- checklist
+
+/** Corrige um item do checklist depois do recebimento (só dono; motivo vai para a auditoria). */
+export async function corrigirChecklistAction(
+  slug: string,
+  osId: string,
+  entrada: unknown,
+): Promise<ResultadoAcao> {
+  const dados = corrigirChecklistSchema.safeParse(entrada);
+  if (!dados.success) return falhaValidacao(dados.error);
+  if (!idSchema.safeParse(osId).success) return falha("OS inválida.");
+  const ctx = await obterContextoEmpresa(slug);
+  if (ctx.membro.papel !== "dono") return falha("Só o dono corrige o checklist depois do recebimento.");
+  const supabase = await criarClienteServidor();
+  const { error } = await supabase.rpc("corrigir_checklist_os", {
+    p_item_id: dados.data.item_id,
+    p_motivo: dados.data.motivo,
+    p_status: dados.data.status,
+    ...(dados.data.quantidade !== null ? { p_quantidade: dados.data.quantidade } : {}),
+    p_observacao: dados.data.observacao, // '' limpa a observação
+  });
+  if (error) return falha(mensagemErroBanco(error));
+  revalidar(slug, osId);
+  return sucesso();
 }

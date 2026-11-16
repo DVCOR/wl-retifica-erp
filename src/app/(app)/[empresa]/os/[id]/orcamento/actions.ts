@@ -7,6 +7,7 @@ import { pode, type Acao } from "@/lib/auth/permissoes";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { SITE_URL } from "@/lib/env";
 import { avaliarDesconto, calcularTotais } from "@/lib/orcamento/calculos";
+import { modoLocal } from "@/lib/modo";
 import { linkPublicoOs } from "@/lib/orcamento/mensagens";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import {
@@ -311,11 +312,14 @@ export async function enviarOrcamentoAction(
 
   const { data, error } = await supabase.rpc("enviar_orcamento", { p_orcamento_id: orcamentoId });
   if (error) return falha(mensagemErroBanco(error));
-  const { data: token } = await supabase.rpc("os_link_publico", { p_os_id: osId });
+  // Modo local: não existe link para o cliente.
+  const { data: token } = modoLocal()
+    ? { data: null }
+    : await supabase.rpc("os_link_publico", { p_os_id: osId });
   atualizar(slug, osId);
   return sucesso({
     versao: data.versao,
-    link: linkPublicoOs(SITE_URL, token ?? ""),
+    link: token ? linkPublicoOs(SITE_URL, token) : "",
   });
 }
 
@@ -348,6 +352,7 @@ export async function regenerarLinkAction(
   slug: string,
   osId: string,
 ): Promise<ResultadoAcao<{ link: string }>> {
+  if (modoLocal()) return falha("Este sistema não usa link público.");
   const ctx = await contexto(slug, osId, "orcamento.enviar");
   if (!ctx) return falha("Sem permissão.");
   const supabase = await criarClienteServidor();

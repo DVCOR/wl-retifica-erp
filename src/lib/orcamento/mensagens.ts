@@ -7,7 +7,8 @@ export function montarMensagemOrcamento(dados: {
   empresa: string;
   total: number | null;
   validade: string | null; // yyyy-mm-dd
-  link: string;
+  /** Link público do orçamento. Em branco/ausente (modo local): mensagem sem link. */
+  link?: string | null;
 }): string {
   const partes = [
     `Olá, ${dados.nomeCliente}! O orçamento da OS ${dados.numeroOs} na ${dados.empresa} está pronto.`,
@@ -17,7 +18,11 @@ export function montarMensagemOrcamento(dados: {
     const [a, m, d] = dados.validade.split("-");
     partes.push(`Válido até ${d}/${m}/${a}.`);
   }
-  partes.push(`Veja o laudo, as fotos e aprove por aqui: ${dados.link}`);
+  if (dados.link) {
+    partes.push(`Veja o laudo, as fotos e aprove por aqui: ${dados.link}`);
+  } else {
+    partes.push("Segue o orçamento em PDF. Para aprovar, é só responder esta mensagem.");
+  }
   return partes.join("\n");
 }
 

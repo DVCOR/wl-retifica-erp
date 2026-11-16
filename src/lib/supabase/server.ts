@@ -2,7 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { Database } from "./types";
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
+import { COOKIE_SESSAO, SUPABASE_ANON_KEY, SUPABASE_URL_SERVIDOR } from "@/lib/env";
 
 /**
  * Cliente Supabase para Server Components, Server Actions e Route Handlers.
@@ -10,7 +10,8 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
  */
 export async function criarClienteServidor() {
   const cookieStore = await cookies();
-  return createServerClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  return createServerClient<Database>(SUPABASE_URL_SERVIDOR, SUPABASE_ANON_KEY, {
+    cookieOptions: { name: COOKIE_SESSAO },
     cookies: {
       getAll() {
         return cookieStore.getAll();

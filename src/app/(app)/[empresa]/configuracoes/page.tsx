@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Users } from "lucide-react";
 import { PageHeader } from "@/components/app/page-header";
 import { SemAcesso } from "@/components/app/sem-acesso";
@@ -42,9 +43,7 @@ export default async function ConfiguracoesPage({ params }: PageProps<"/[empresa
         <Card>
           <CardHeader>
             <CardTitle>Empresa</CardTitle>
-            <CardDescription>
-              Aparece nos comprovantes e no link enviado ao cliente.
-            </CardDescription>
+            <CardDescription>Aparece nos comprovantes e nos orçamentos em PDF.</CardDescription>
           </CardHeader>
           <CardContent>
             {dados && (
@@ -63,7 +62,15 @@ export default async function ConfiguracoesPage({ params }: PageProps<"/[empresa
         <Card>
           <CardHeader>
             <CardTitle>Usuários</CardTitle>
-            <CardDescription>Convites e edição de papéis chegam em breve.</CardDescription>
+            <CardDescription>
+              Quem acessa o sistema e com qual papel.{" "}
+              <Link
+                href={`/${slug}/configuracoes/usuarios`}
+                className="font-semibold text-primaria underline-offset-4 hover:underline"
+              >
+                Gerenciar usuários
+              </Link>
+            </CardDescription>
           </CardHeader>
           <CardContent className="px-0 sm:px-2">
             {membros.length === 0 ? (

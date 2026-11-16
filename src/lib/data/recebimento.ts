@@ -1,3 +1,4 @@
+import { urlParaNavegador } from "@/lib/env";
 import "server-only";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { BUCKET_ANEXOS } from "@/lib/recebimento/armazenamento";
@@ -126,7 +127,7 @@ export async function obterOsRecebimento(
       3600,
     );
     for (const a of assinadas ?? []) {
-      if (a.path && a.signedUrl) urls.set(a.path, a.signedUrl);
+      if (a.path && a.signedUrl) urls.set(a.path, urlParaNavegador(a.signedUrl));
     }
   }
 

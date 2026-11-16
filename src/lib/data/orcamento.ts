@@ -1,3 +1,4 @@
+import { urlParaNavegador } from "@/lib/env";
 import "server-only";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { BUCKET_ANEXOS } from "@/lib/recebimento/armazenamento";
@@ -135,7 +136,8 @@ export async function listarMedicoes(empresaId: string, osId: string): Promise<M
       lista.map((a) => a.storage_path),
       3600,
     );
-    for (const u of data ?? []) if (u.path && u.signedUrl) urls.set(u.path, u.signedUrl);
+    for (const u of data ?? [])
+      if (u.path && u.signedUrl) urls.set(u.path, urlParaNavegador(u.signedUrl));
   }
   const ids = [
     ...new Set((med.data ?? []).map((m) => m.membro_id).filter((x): x is string => !!x)),

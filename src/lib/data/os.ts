@@ -233,23 +233,42 @@ export async function listarAnexosOs(empresaId: string, osId: string): Promise<A
   }));
 }
 
-export type DivergenciaView = { grupo: string; descricao: string; status: string; quantidade: number | null; observacao: string | null };
+export type DivergenciaView = {
+  id: string;
+  grupo: string;
+  descricao: string;
+  status: Database["public"]["Enums"]["checklist_status"];
+  quantidade: number | null;
+  observacao: string | null;
+  exige_quantidade: boolean;
+};
 
+/** Itens do checklist da OS (todos) e as divergências (danificado/ausente). */
 export async function listarDivergenciasChecklist(
   empresaId: string,
   osId: string,
-): Promise<{ total: number; divergencias: DivergenciaView[] }> {
+): Promise<{ total: number; itens: DivergenciaView[]; divergencias: DivergenciaView[] }> {
   const supabase = await criarClienteServidor();
   const { data, error } = await supabase
     .from("os_checklist_itens")
-    .select("grupo, descricao, status, quantidade, observacao, ordem")
+    .select("id, grupo, descricao, status, quantidade, observacao, exige_quantidade, ordem")
     .eq("empresa_id", empresaId)
     .eq("os_id", osId)
     .order("ordem");
   if (error) throw new Error(`Erro ao carregar checklist: ${error.message}`);
+  const itens: DivergenciaView[] = data.map((i) => ({
+    id: i.id,
+    grupo: i.grupo,
+    descricao: i.descricao,
+    status: i.status,
+    quantidade: i.quantidade === null ? null : Number(i.quantidade),
+    observacao: i.observacao,
+    exige_quantidade: i.exige_quantidade,
+  }));
   return {
-    total: data.length,
-    divergencias: data.filter((i) => i.status !== "ok" && i.status !== "na"),
+    total: itens.length,
+    itens,
+    divergencias: itens.filter((i) => i.status !== "ok" && i.status !== "na"),
   };
 }
 

@@ -12,6 +12,7 @@ import { criarClienteServidor } from "@/lib/supabase/server";
 import {
   alterarStatusSchema,
   cancelarSchema,
+  corrigirChecklistSchema,
   entregaSchema,
   fotoExecucaoSchema,
   garantiaOsSchema,
@@ -343,4 +344,30 @@ export async function criarOsGarantiaAction(
   if (error) return falha(mensagemErroBanco(error));
   revalidar(slug, osId);
   return sucesso({ id: data.id });
+}
+
+// ------------------------------------------------------------- checklist
+
+/** Corrige um item do checklist depois do recebimento (só dono; motivo vai para a auditoria). */
+export async function corrigirChecklistAction(
+  slug: string,
+  osId: string,
+  entrada: unknown,
+): Promise<ResultadoAcao> {
+  const dados = corrigirChecklistSchema.safeParse(entrada);
+  if (!dados.success) return falhaValidacao(dados.error);
+  if (!idSchema.safeParse(osId).success) return falha("OS inválida.");
+  const ctx = await obterContextoEmpresa(slug);
+  if (ctx.membro.papel !== "dono") return falha("Só o dono corrige o checklist depois do recebimento.");
+  const supabase = await criarClienteServidor();
+  const { error } = await supabase.rpc("corrigir_checklist_os", {
+    p_item_id: dados.data.item_id,
+    p_motivo: dados.data.motivo,
+    p_status: dados.data.status,
+    ...(dados.data.quantidade !== null ? { p_quantidade: dados.data.quantidade } : {}),
+    p_observacao: dados.data.observacao, // '' limpa a observação
+  });
+  if (error) return falha(mensagemErroBanco(error));
+  revalidar(slug, osId);
+  return sucesso();
 }

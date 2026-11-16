@@ -62,3 +62,14 @@ export const fotoExecucaoSchema = z.object({
 export const garantiaOsSchema = z.object({
   observacoes: z.string().trim().max(500).optional(),
 });
+
+export const checklistStatusEnum = z.enum(["ok", "danificado", "ausente", "na"]);
+
+/** Correção de item do checklist depois do recebimento (só dono; motivo auditado). */
+export const corrigirChecklistSchema = z.object({
+  item_id: z.string().uuid(),
+  status: checklistStatusEnum,
+  quantidade: z.number().min(0, "Quantidade inválida").max(9999).nullable(),
+  observacao: z.string().trim().max(500),
+  motivo: z.string().trim().min(3, "Informe o motivo da correção").max(500),
+});

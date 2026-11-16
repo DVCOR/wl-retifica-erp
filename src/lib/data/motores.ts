@@ -1,6 +1,6 @@
 import "server-only";
 import { criarClienteServidor } from "@/lib/supabase/server";
-import { normalizarPlaca, type FiltroMotores } from "@/lib/validacoes/motores";
+import type { FiltroMotores } from "@/lib/validacoes/motores";
 import type { Database } from "@/lib/supabase/types";
 import {
   enriquecerOs,
@@ -34,41 +34,53 @@ export type MotorResumo = Pick<
   | "veiculo_ano"
 >;
 
-const SELECT_RESUMO =
-  "id, cliente_id, marca, modelo, codigo_motor, numero_serie, cilindros, valvulas_por_cilindro, veiculo_placa, veiculo_modelo, veiculo_ano";
+type LinhaListarMotores = Database["public"]["Functions"]["listar_motores"]["Returns"][number];
 
-function condicoesBusca(termoBruto: string): string[] {
-  const termo = termoSeguro(termoBruto);
-  if (!termo) return [];
-  const placa = normalizarPlaca(termo);
-  const c = [
-    `marca.ilike.%${termo}%`,
-    `modelo.ilike.%${termo}%`,
-    `codigo_motor.ilike.%${termo}%`,
-    `numero_serie.ilike.%${termo}%`,
-    `veiculo_modelo.ilike.%${termo}%`,
-  ];
-  if (placa) c.push(`veiculo_placa.ilike.%${placa}%`);
-  return c;
+/** Converte a linha da RPC (o gerador não marca colunas anuláveis) em MotorLinha. */
+function paraMotorLinha(m: LinhaListarMotores): MotorLinha {
+  return {
+    id: m.id,
+    empresa_id: m.empresa_id,
+    cliente_id: m.cliente_id ?? null,
+    marca: m.marca ?? null,
+    modelo: m.modelo ?? null,
+    codigo_motor: m.codigo_motor ?? null,
+    numero_serie: m.numero_serie ?? null,
+    combustivel: m.combustivel ?? null,
+    cilindros: m.cilindros ?? null,
+    cilindrada: m.cilindrada ?? null,
+    valvulas_por_cilindro: m.valvulas_por_cilindro ?? null,
+    veiculo_placa: m.veiculo_placa ?? null,
+    veiculo_modelo: m.veiculo_modelo ?? null,
+    veiculo_ano: m.veiculo_ano ?? null,
+    observacoes: m.observacoes ?? null,
+    created_at: m.created_at,
+    updated_at: m.updated_at,
+    cliente: m.cliente_id ? { id: m.cliente_id, nome: m.cliente_nome ?? "" } : null,
+  };
 }
 
+/**
+ * Lista paginada com busca sem acento (RPC `listar_motores`: marca, modelo,
+ * código, nº de série, veículo, nome do cliente e trecho da placa).
+ */
 export async function listarMotores(
   empresaId: string,
   filtro: FiltroMotores,
 ): Promise<{ itens: MotorLinha[]; total: number }> {
   const supabase = await criarClienteServidor();
-  let q = supabase
-    .from("motores")
-    .select("*, cliente:clientes(id, nome)", { count: "exact" })
-    .eq("empresa_id", empresaId);
-  const condicoes = condicoesBusca(filtro.q);
-  if (condicoes.length) q = q.or(condicoes.join(","));
-  const de = (filtro.pagina - 1) * POR_PAGINA_MOTORES;
-  const { data, error, count } = await q
-    .order("created_at", { ascending: false })
-    .range(de, de + POR_PAGINA_MOTORES - 1);
+  const { data, error } = await supabase.rpc("listar_motores", {
+    p_empresa_id: empresaId,
+    p_termo: filtro.q.trim() || undefined,
+    p_limite: POR_PAGINA_MOTORES,
+    p_offset: (filtro.pagina - 1) * POR_PAGINA_MOTORES,
+  });
   if (error) throw new Error(`Erro ao listar motores: ${error.message}`);
-  return { itens: (data ?? []) as unknown as MotorLinha[], total: count ?? 0 };
+  const linhas = data ?? [];
+  return {
+    itens: linhas.map(paraMotorLinha),
+    total: linhas.length ? Number(linhas[0].total) : 0,
+  };
 }
 
 export async function obterMotor(empresaId: string, id: string): Promise<MotorLinha | null> {
@@ -99,7 +111,10 @@ export async function listarMotoresDoCliente(
   return data ?? [];
 }
 
-/** Busca para seletores: motores do cliente primeiro, depois os demais que casam com o termo. */
+/**
+ * Busca para seletores: sem termo, os motores do cliente; com termo, todos os
+ * que casam (sem acento), os do cliente primeiro.
+ */
 export async function buscarMotores(
   empresaId: string,
   termo: string,
@@ -107,16 +122,29 @@ export async function buscarMotores(
   limite = 10,
 ): Promise<MotorResumo[]> {
   const supabase = await criarClienteServidor();
-  const condicoes = condicoesBusca(termo);
-  let q = supabase.from("motores").select(SELECT_RESUMO).eq("empresa_id", empresaId);
-  if (condicoes.length) q = q.or(condicoes.join(","));
-  else if (clienteId) q = q.eq("cliente_id", clienteId);
-  const { data, error } = await q.order("created_at", { ascending: false }).limit(limite * 3);
+  const { data, error } = await supabase.rpc("listar_motores", {
+    p_empresa_id: empresaId,
+    p_termo: termo.trim() || undefined,
+    p_cliente_id: clienteId ?? undefined,
+    p_limite: limite,
+  });
   if (error) throw new Error(`Erro ao buscar motores: ${error.message}`);
-  const lista = data ?? [];
-  if (clienteId)
-    lista.sort((a, b) => Number(b.cliente_id === clienteId) - Number(a.cliente_id === clienteId));
-  return lista.slice(0, limite);
+  return (data ?? []).map((m) => {
+    const l = paraMotorLinha(m);
+    return {
+      id: l.id,
+      cliente_id: l.cliente_id,
+      marca: l.marca,
+      modelo: l.modelo,
+      codigo_motor: l.codigo_motor,
+      numero_serie: l.numero_serie,
+      cilindros: l.cilindros,
+      valvulas_por_cilindro: l.valvulas_por_cilindro,
+      veiculo_placa: l.veiculo_placa,
+      veiculo_modelo: l.veiculo_modelo,
+      veiculo_ano: l.veiculo_ano,
+    };
+  });
 }
 
 export type HistoricoMotor = {

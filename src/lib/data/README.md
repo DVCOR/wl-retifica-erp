@@ -78,7 +78,7 @@ Regras:
 - Não lance erro para o cliente: devolva `ResultadoAcao` (`src/lib/acao.ts`). `mensagemErroBanco()` traduz erros do Postgres; as funções SQL já levantam mensagens em pt-BR (errcode `P0001`).
 - Update/delete bloqueado pela RLS **não dá erro**, só afeta 0 linhas: use `.select("id")` e confira o tamanho.
 - Fluxos com regra no banco usam RPC, não update direto:
-  `criar_os`, `alterar_status_os`, `enviar_orcamento`, `responder_orcamento`, `adicionar_kit_orcamento`, `regenerar_token_publico`, `aceitar_convite`, `buscar`. Ver `docs/BANCO.md`.
+  `criar_os`, `alterar_status_os`, `enviar_orcamento`, `responder_orcamento`, `adicionar_kit_orcamento`, `regenerar_token_publico`, `aceitar_convite`, `buscar`, `salvar_kit`, `salvar_precos_tabela`, `definir_tabela_padrao`, `corrigir_checklist_os`; listagens com busca: `listar_clientes`, `listar_motores`, `resumo_cliente`. Ver `docs/BANCO.md`.
 - Técnico inserindo item sugerido em orçamento: `insert` **sem** `.select()` (ele não pode ler a linha de volta).
 
 ## 4. Formulário (Client Component)

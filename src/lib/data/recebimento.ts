@@ -16,35 +16,6 @@ const COLUNAS_CLIENTE = "id, nome, nome_fantasia, tipo, telefone_whatsapp, docum
 const COLUNAS_MOTOR =
   "id, marca, modelo, codigo_motor, numero_serie, combustivel, cilindros, veiculo_placa";
 
-/** Remove caracteres que quebrariam o filtro `.or()` do PostgREST. */
-function termoSeguro(termo: string): string {
-  return termo.replace(/[%,()*\\]/g, " ").trim();
-}
-
-export async function buscarClientesParaOs(
-  empresaId: string,
-  termo: string,
-): Promise<ClienteResumo[]> {
-  const t = termoSeguro(termo);
-  if (t.length < 2) return [];
-  const digitos = t.replace(/\D/g, "");
-  const filtros = [`nome.ilike.%${t}%`, `nome_fantasia.ilike.%${t}%`];
-  if (digitos.length >= 3) {
-    filtros.push(`documento.ilike.%${digitos}%`, `telefone_whatsapp.ilike.%${digitos}%`);
-  }
-  const supabase = await criarClienteServidor();
-  const { data, error } = await supabase
-    .from("clientes")
-    .select(COLUNAS_CLIENTE)
-    .eq("empresa_id", empresaId)
-    .eq("ativo", true)
-    .or(filtros.join(","))
-    .order("nome")
-    .limit(8);
-  if (error) throw new Error(`Erro ao buscar clientes: ${error.message}`);
-  return data ?? [];
-}
-
 export async function obterClienteParaOs(
   empresaId: string,
   clienteId: string,
@@ -58,22 +29,6 @@ export async function obterClienteParaOs(
     .maybeSingle();
   if (error) throw new Error(`Erro ao carregar o cliente: ${error.message}`);
   return data;
-}
-
-export async function listarMotoresDoCliente(
-  empresaId: string,
-  clienteId: string,
-): Promise<MotorResumo[]> {
-  const supabase = await criarClienteServidor();
-  const { data, error } = await supabase
-    .from("motores")
-    .select(COLUNAS_MOTOR)
-    .eq("empresa_id", empresaId)
-    .eq("cliente_id", clienteId)
-    .order("created_at", { ascending: false })
-    .limit(30);
-  if (error) throw new Error(`Erro ao listar motores: ${error.message}`);
-  return data ?? [];
 }
 
 export type FotoOs = {

@@ -91,6 +91,7 @@ export type Database = {
           empresa_id: string;
           id: number;
           membro_id: string | null;
+          motivo: string | null;
           registro_id: string | null;
           tabela: string;
           user_id: string | null;
@@ -104,6 +105,7 @@ export type Database = {
           empresa_id: string;
           id?: never;
           membro_id?: string | null;
+          motivo?: string | null;
           registro_id?: string | null;
           tabela: string;
           user_id?: string | null;
@@ -116,6 +118,7 @@ export type Database = {
           empresa_id?: string;
           id?: never;
           membro_id?: string | null;
+          motivo?: string | null;
           registro_id?: string | null;
           tabela?: string;
           user_id?: string | null;
@@ -1963,6 +1966,16 @@ export type Database = {
         }[];
       };
       convite_info: { Args: { p_token: string }; Returns: Json };
+      corrigir_checklist_os: {
+        Args: {
+          p_item_id: string;
+          p_motivo: string;
+          p_observacao?: string;
+          p_quantidade?: number;
+          p_status?: Database["public"]["Enums"]["checklist_status"];
+        };
+        Returns: undefined;
+      };
       criar_empresa: {
         Args: { p_nome_fantasia: string; p_nome_usuario: string; p_slug: string };
         Returns: {
@@ -2038,6 +2051,10 @@ export type Database = {
           isSetofReturn: false;
         };
       };
+      definir_tabela_padrao: {
+        Args: { p_tabela_id: string; p_tipo: Database["public"]["Enums"]["cliente_tipo"] };
+        Returns: undefined;
+      };
       empresas_do_usuario: { Args: Record<PropertyKey, never>; Returns: string[] };
       enviar_orcamento: {
         Args: { p_orcamento_id: string };
@@ -2071,6 +2088,57 @@ export type Database = {
       };
       f_unaccent: { Args: { texto: string }; Returns: string };
       inicializar_empresa: { Args: { p_empresa_id: string }; Returns: undefined };
+      listar_clientes: {
+        Args: {
+          p_ativo?: boolean;
+          p_empresa_id: string;
+          p_limite?: number;
+          p_offset?: number;
+          p_termo?: string;
+          p_tipo?: Database["public"]["Enums"]["cliente_tipo"];
+        };
+        Returns: {
+          ativo: boolean;
+          documento: string;
+          id: string;
+          nome: string;
+          nome_fantasia: string;
+          os_em_andamento: number;
+          telefone_whatsapp: string;
+          tipo: Database["public"]["Enums"]["cliente_tipo"];
+          total: number;
+        }[];
+      };
+      listar_motores: {
+        Args: {
+          p_cliente_id?: string;
+          p_empresa_id: string;
+          p_limite?: number;
+          p_offset?: number;
+          p_termo?: string;
+        };
+        Returns: {
+          cilindrada: string;
+          cilindros: number;
+          cliente_id: string;
+          cliente_nome: string;
+          codigo_motor: string;
+          combustivel: Database["public"]["Enums"]["combustivel"];
+          created_at: string;
+          empresa_id: string;
+          id: string;
+          marca: string;
+          modelo: string;
+          numero_serie: string;
+          observacoes: string;
+          total: number;
+          updated_at: string;
+          valvulas_por_cilindro: number;
+          veiculo_ano: number;
+          veiculo_modelo: string;
+          veiculo_placa: string;
+        }[];
+      };
       membro_atual: { Args: { p_empresa_id: string }; Returns: string };
       normalizar_busca: { Args: { texto: string }; Returns: string };
       os_papeis_para_status: {
@@ -2160,6 +2228,17 @@ export type Database = {
         };
         Returns: Json;
       };
+      resumo_cliente: {
+        Args: { p_cliente_id: string };
+        Returns: {
+          em_aberto: number;
+          motores_em_garantia: number;
+          os_12_meses: number;
+          os_em_andamento: number;
+        }[];
+      };
+      salvar_kit: { Args: { p_dados: Json; p_itens: Json; p_kit_id: string }; Returns: string };
+      salvar_precos_tabela: { Args: { p_precos: Json; p_tabela_id: string }; Returns: number };
       so_alfanumerico: { Args: { texto: string }; Returns: string };
       tem_papel: {
         Args: { p_empresa_id: string; p_papeis: Database["public"]["Enums"]["papel"][] };

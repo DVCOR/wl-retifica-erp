@@ -128,28 +128,32 @@ export async function salvarTabelaPreco(
   if (!ctx) return falha(SEM_PERMISSAO);
 
   const supabase = await criarClienteServidor();
+  const { padrao_para, ...campos } = dados.data;
 
-  // Só uma tabela ativa pode ser a padrão de cada tipo de cliente (índice único):
-  // a nova escolha substitui a anterior.
-  if (dados.data.padrao_para) {
-    let libera = supabase
-      .from("tabelas_preco")
-      .update({ padrao_para: null })
-      .eq("empresa_id", ctx.empresaId)
-      .eq("padrao_para", dados.data.padrao_para);
-    if (id) libera = libera.neq("id", id);
-    const { error } = await libera;
-    if (error) return falha(mensagemErroBanco(error));
-  }
-
+  // Grava nome/desconto; a escolha de tabela padrão vai pela RPC
+  // definir_tabela_padrao, que libera a anterior na mesma transação.
   const q = id
-    ? supabase.from("tabelas_preco").update(dados.data).eq("empresa_id", ctx.empresaId).eq("id", id)
-    : supabase.from("tabelas_preco").insert({ ...dados.data, empresa_id: ctx.empresaId });
+    ? supabase
+        .from("tabelas_preco")
+        .update(padrao_para ? campos : { ...campos, padrao_para: null })
+        .eq("empresa_id", ctx.empresaId)
+        .eq("id", id)
+    : supabase.from("tabelas_preco").insert({ ...campos, empresa_id: ctx.empresaId });
   const { data, error } = await q.select("id");
   if (error) return falha(mensagemErroBanco(error));
   if (!data?.length) return falha("Você não tem permissão para esta ação.");
+  const tabelaId = data[0].id;
+
+  if (padrao_para) {
+    const { error: erroPadrao } = await supabase.rpc("definir_tabela_padrao", {
+      p_tabela_id: tabelaId,
+      p_tipo: padrao_para,
+    });
+    if (erroPadrao) return falha(mensagemErroBanco(erroPadrao));
+  }
+
   revalidatePath(`/${slug}/catalogo`, "layout");
-  return sucesso({ id: data[0].id });
+  return sucesso({ id: tabelaId });
 }
 
 export async function alternarAtivoTabelaPreco(
@@ -186,69 +190,16 @@ export async function salvarPrecosTabela(
   const ctx = await contextoEdicao(slug);
   if (!ctx) return falha(SEM_PERMISSAO);
 
+  // Upsert/remoção numa transação só (RPC salvar_precos_tabela).
   const supabase = await criarClienteServidor();
-  const { data: existentes, error: erroLer } = await supabase
-    .from("tabela_preco_itens")
-    .select("id, servico_id, peca_id")
-    .eq("empresa_id", ctx.empresaId)
-    .eq("tabela_preco_id", tabela.data);
-  if (erroLer) return falha(mensagemErroBanco(erroLer));
-
-  const idExistente = new Map<string, string>();
-  for (const e of existentes ?? []) {
-    if (e.servico_id) idExistente.set(`servico:${e.servico_id}`, e.id);
-    if (e.peca_id) idExistente.set(`peca:${e.peca_id}`, e.id);
-  }
-
-  const remover: string[] = [];
-  const novos: {
-    empresa_id: string;
-    tabela_preco_id: string;
-    servico_id?: string;
-    peca_id?: string;
-    preco: number;
-  }[] = [];
-  const atualizar: { id: string; preco: number }[] = [];
-
-  for (const item of dados.data.itens) {
-    const existente = idExistente.get(`${item.tipo}:${item.id}`);
-    if (item.preco === null) {
-      if (existente) remover.push(existente);
-    } else if (existente) {
-      atualizar.push({ id: existente, preco: item.preco });
-    } else {
-      novos.push({
-        empresa_id: ctx.empresaId,
-        tabela_preco_id: tabela.data,
-        ...(item.tipo === "servico" ? { servico_id: item.id } : { peca_id: item.id }),
-        preco: item.preco,
-      });
-    }
-  }
-
-  if (remover.length) {
-    const { error } = await supabase
-      .from("tabela_preco_itens")
-      .delete()
-      .eq("empresa_id", ctx.empresaId)
-      .in("id", remover);
-    if (error) return falha(mensagemErroBanco(error));
-  }
-  if (novos.length) {
-    const { error } = await supabase.from("tabela_preco_itens").insert(novos);
-    if (error) return falha(mensagemErroBanco(error));
-  }
-  for (const a of atualizar) {
-    const { error } = await supabase
-      .from("tabela_preco_itens")
-      .update({ preco: a.preco })
-      .eq("empresa_id", ctx.empresaId)
-      .eq("id", a.id);
-    if (error) return falha(mensagemErroBanco(error));
-  }
+  const { data, error } = await supabase.rpc("salvar_precos_tabela", {
+    p_tabela_id: tabela.data,
+    p_precos: dados.data.itens,
+  });
+  if (error) return falha(mensagemErroBanco(error));
 
   revalidatePath(`/${slug}/catalogo`, "layout");
-  return sucesso({ gravados: remover.length + novos.length + atualizar.length });
+  return sucesso({ gravados: data ?? 0 });
 }
 
 // -------------------------------------------------------------------- kits
@@ -262,62 +213,19 @@ export async function salvarKit(
   const ctx = await contextoEdicao(slug);
   if (!ctx) return falha(SEM_PERMISSAO);
 
+  // Cabeçalho + substituição dos itens numa transação só (RPC salvar_kit).
   const supabase = await criarClienteServidor();
   const { itens, ...cabecalho } = dados.data;
-
-  let kitId = id;
-  if (kitId) {
-    const { data, error } = await supabase
-      .from("kits")
-      .update(cabecalho)
-      .eq("empresa_id", ctx.empresaId)
-      .eq("id", kitId)
-      .select("id");
-    if (error) return falha(mensagemErroBanco(error));
-    if (!data?.length) return falha("Você não tem permissão para esta ação.");
-  } else {
-    const { data, error } = await supabase
-      .from("kits")
-      .insert({ ...cabecalho, empresa_id: ctx.empresaId })
-      .select("id")
-      .single();
-    if (error) return falha(mensagemErroBanco(error));
-    kitId = data.id;
-  }
-
-  // Insere os novos itens antes de apagar os antigos: se algo falhar, o kit não fica vazio.
-  const { data: antigos, error: erroAntigos } = await supabase
-    .from("kit_itens")
-    .select("id")
-    .eq("empresa_id", ctx.empresaId)
-    .eq("kit_id", kitId);
-  if (erroAntigos) return falha(mensagemErroBanco(erroAntigos));
-
-  const { error: erroInserir } = await supabase.from("kit_itens").insert(
-    itens.map((item, ordem) => ({
-      empresa_id: ctx.empresaId,
-      kit_id: kitId,
-      ...(item.tipo === "servico" ? { servico_id: item.id } : { peca_id: item.id }),
-      quantidade: item.quantidade,
-      ordem,
-    })),
-  );
-  if (erroInserir) return falha(mensagemErroBanco(erroInserir));
-
-  if (antigos?.length) {
-    const { error } = await supabase
-      .from("kit_itens")
-      .delete()
-      .eq("empresa_id", ctx.empresaId)
-      .in(
-        "id",
-        antigos.map((a) => a.id),
-      );
-    if (error) return falha(mensagemErroBanco(error));
-  }
+  const { data, error } = await supabase.rpc("salvar_kit", {
+    // null = criar (o gerador de tipos não marca o uuid como anulável)
+    p_kit_id: id as string,
+    p_dados: { ...cabecalho, empresa_id: ctx.empresaId },
+    p_itens: itens,
+  });
+  if (error) return falha(mensagemErroBanco(error));
 
   revalidatePath(`/${slug}/catalogo`, "layout");
-  return sucesso({ id: kitId });
+  return sucesso({ id: data });
 }
 
 export async function alternarAtivoKit(slug: string, entrada: unknown): Promise<ResultadoAcao> {

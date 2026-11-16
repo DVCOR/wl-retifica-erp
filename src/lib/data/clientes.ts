@@ -2,7 +2,7 @@ import "server-only";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import type { OsStatus } from "@/lib/auth/permissoes";
 import { normalizarPlaca } from "@/lib/validacoes/motores";
-import { somenteDigitos, type FiltroClientes, type TipoCliente } from "@/lib/validacoes/clientes";
+import type { FiltroClientes, TipoCliente } from "@/lib/validacoes/clientes";
 import type { Database } from "@/lib/supabase/types";
 
 /**
@@ -32,84 +32,38 @@ export function termoSeguro(termo: string): string {
     .trim();
 }
 
-const STATUS_ANDAMENTO: OsStatus[] = [
-  "recebido",
-  "em_analise",
-  "orcamento_enviado",
-  "aprovado",
-  "em_execucao",
-  "aguardando_peca",
-  "pronto",
-];
-
+/**
+ * Lista paginada com busca sem acento (RPC `listar_clientes`: nome, fantasia,
+ * documento, telefone, placa de motores e de OS). Mais relevantes primeiro.
+ */
 export async function listarClientes(
   empresaId: string,
   filtro: FiltroClientes,
 ): Promise<{ itens: ClienteLinha[]; total: number }> {
   const supabase = await criarClienteServidor();
-  let q = supabase
-    .from("clientes")
-    .select("id, tipo, nome, nome_fantasia, documento, telefone_whatsapp, ativo", {
-      count: "exact",
-    })
-    .eq("empresa_id", empresaId);
-
-  if (filtro.tipo !== "todos") q = q.eq("tipo", filtro.tipo);
-  if (filtro.situacao === "ativos") q = q.eq("ativo", true);
-  if (filtro.situacao === "inativos") q = q.eq("ativo", false);
-
-  const termo = termoSeguro(filtro.q);
-  if (termo) {
-    const condicoes = [`nome.ilike.%${termo}%`, `nome_fantasia.ilike.%${termo}%`];
-    const digitos = somenteDigitos(termo);
-    if (digitos.length >= 3) {
-      condicoes.push(`documento.ilike.%${digitos}%`, `telefone_whatsapp.ilike.%${digitos}%`);
-    }
-    const placa = normalizarPlaca(termo);
-    if (placa.length >= 3) {
-      const [motores, os] = await Promise.all([
-        supabase
-          .from("motores")
-          .select("cliente_id")
-          .eq("empresa_id", empresaId)
-          .not("cliente_id", "is", null)
-          .ilike("veiculo_placa", `%${placa}%`)
-          .limit(200),
-        supabase
-          .from("os")
-          .select("cliente_id")
-          .eq("empresa_id", empresaId)
-          .ilike("cliente_final_placa", `%${placa}%`)
-          .limit(200),
-      ]);
-      const ids = new Set<string>();
-      for (const m of motores.data ?? []) if (m.cliente_id) ids.add(m.cliente_id);
-      for (const o of os.data ?? []) ids.add(o.cliente_id);
-      if (ids.size) condicoes.push(`id.in.(${[...ids].join(",")})`);
-    }
-    q = q.or(condicoes.join(","));
-  }
-
-  const de = (filtro.pagina - 1) * POR_PAGINA_CLIENTES;
-  const { data, error, count } = await q.order("nome").range(de, de + POR_PAGINA_CLIENTES - 1);
+  const termo = filtro.q.trim();
+  const { data, error } = await supabase.rpc("listar_clientes", {
+    p_empresa_id: empresaId,
+    p_termo: termo || undefined,
+    p_tipo: filtro.tipo === "todos" ? undefined : filtro.tipo,
+    p_ativo: filtro.situacao === "todos" ? undefined : filtro.situacao === "ativos",
+    p_limite: POR_PAGINA_CLIENTES,
+    p_offset: (filtro.pagina - 1) * POR_PAGINA_CLIENTES,
+  });
   if (error) throw new Error(`Erro ao listar clientes: ${error.message}`);
-
-  const ids = (data ?? []).map((c) => c.id);
-  const andamento = new Map<string, number>();
-  if (ids.length) {
-    const { data: os, error: erroOs } = await supabase
-      .from("os")
-      .select("cliente_id")
-      .eq("empresa_id", empresaId)
-      .in("cliente_id", ids)
-      .in("status", STATUS_ANDAMENTO);
-    if (erroOs) throw new Error(`Erro ao contar OS dos clientes: ${erroOs.message}`);
-    for (const o of os ?? []) andamento.set(o.cliente_id, (andamento.get(o.cliente_id) ?? 0) + 1);
-  }
-
+  const linhas = data ?? [];
   return {
-    itens: (data ?? []).map((c) => ({ ...c, os_em_andamento: andamento.get(c.id) ?? 0 })),
-    total: count ?? 0,
+    itens: linhas.map((c) => ({
+      id: c.id,
+      tipo: c.tipo,
+      nome: c.nome,
+      nome_fantasia: c.nome_fantasia ?? null,
+      documento: c.documento ?? null,
+      telefone_whatsapp: c.telefone_whatsapp ?? null,
+      ativo: c.ativo,
+      os_em_andamento: c.os_em_andamento ?? 0,
+    })),
+    total: linhas.length ? Number(linhas[0].total) : 0,
   };
 }
 
@@ -150,28 +104,27 @@ export type ClienteResumoBusca = {
   telefone_whatsapp: string | null;
 };
 
-/** Busca rápida para seletores (nome, fantasia, documento, telefone). */
+/** Busca rápida para seletores (clientes ativos; mesma busca sem acento da lista). */
 export async function buscarClientes(
   empresaId: string,
   termo: string,
   limite = 8,
 ): Promise<ClienteResumoBusca[]> {
   const supabase = await criarClienteServidor();
-  let q = supabase
-    .from("clientes")
-    .select("id, nome, tipo, documento, telefone_whatsapp")
-    .eq("empresa_id", empresaId)
-    .eq("ativo", true);
-  const t = termoSeguro(termo);
-  if (t) {
-    const condicoes = [`nome.ilike.%${t}%`, `nome_fantasia.ilike.%${t}%`];
-    const d = somenteDigitos(t);
-    if (d.length >= 3) condicoes.push(`documento.ilike.%${d}%`, `telefone_whatsapp.ilike.%${d}%`);
-    q = q.or(condicoes.join(","));
-  }
-  const { data, error } = await q.order("nome").limit(limite);
+  const { data, error } = await supabase.rpc("listar_clientes", {
+    p_empresa_id: empresaId,
+    p_termo: termo.trim() || undefined,
+    p_ativo: true,
+    p_limite: limite,
+  });
   if (error) throw new Error(`Erro ao buscar clientes: ${error.message}`);
-  return data ?? [];
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    nome: c.nome,
+    tipo: c.tipo,
+    documento: c.documento ?? null,
+    telefone_whatsapp: c.telefone_whatsapp ?? null,
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -186,57 +139,22 @@ export type ResumoCliente = {
   motores_em_garantia: number;
 };
 
-const STATUS_EM_ABERTO: OsStatus[] = ["aprovado", "em_execucao", "aguardando_peca", "pronto"];
-
+/** Números da ficha (RPC `resumo_cliente`; `em_aberto` só para quem vê preço). */
 export async function resumoCliente(
   empresaId: string,
   clienteId: string,
   vePrecos: boolean,
 ): Promise<ResumoCliente> {
   const supabase = await criarClienteServidor();
-  const hoje = new Date();
-  const umAnoAtras = new Date(hoje);
-  umAnoAtras.setFullYear(hoje.getFullYear() - 1);
-  const hojeIso = new Date(hoje.getTime() - 3 * 3600_000).toISOString().slice(0, 10);
-
-  const { data, error } = await supabase
-    .from("os")
-    .select("status, created_at, motor_id, garantia_ate, orcamento_aprovado_id")
-    .eq("empresa_id", empresaId)
-    .eq("cliente_id", clienteId)
-    .neq("status", "em_recebimento");
+  const { data, error } = await supabase.rpc("resumo_cliente", { p_cliente_id: clienteId });
   if (error) throw new Error(`Erro ao resumir o cliente: ${error.message}`);
-  const os = data ?? [];
-
-  let emAberto: number | null = null;
-  if (vePrecos) {
-    const ids = os
-      .filter((o) => STATUS_EM_ABERTO.includes(o.status) && o.orcamento_aprovado_id)
-      .map((o) => o.orcamento_aprovado_id as string);
-    emAberto = 0;
-    if (ids.length) {
-      const { data: orc, error: erroOrc } = await supabase
-        .from("orcamentos")
-        .select("total")
-        .eq("empresa_id", empresaId)
-        .in("id", ids);
-      if (erroOrc) throw new Error(`Erro ao somar orçamentos: ${erroOrc.message}`);
-      emAberto = (orc ?? []).reduce((s, o) => s + Number(o.total), 0);
-    }
-  }
-
-  const garantia = new Set<string>();
-  for (const o of os) {
-    if (o.status === "entregue" && o.garantia_ate && o.garantia_ate >= hojeIso) {
-      garantia.add(o.motor_id ?? `os-${o.created_at}`);
-    }
-  }
-
+  const r = data?.[0];
+  const emAberto = r?.em_aberto ?? null;
   return {
-    os_em_andamento: os.filter((o) => STATUS_ANDAMENTO.includes(o.status)).length,
-    os_12_meses: os.filter((o) => new Date(o.created_at) >= umAnoAtras).length,
-    em_aberto: emAberto,
-    motores_em_garantia: garantia.size,
+    os_em_andamento: r?.os_em_andamento ?? 0,
+    os_12_meses: r?.os_12_meses ?? 0,
+    em_aberto: vePrecos ? Number(emAberto ?? 0) : null,
+    motores_em_garantia: r?.motores_em_garantia ?? 0,
   };
 }
 

@@ -92,7 +92,13 @@ export async function obterOsPublica(token: string): Promise<OsPublica | null> {
   return data as unknown as OsPublica;
 }
 
-export type FotoPublica = { url: string; legenda: string | null };
+export type FotoPublica = {
+  url: string;
+  legenda: string | null;
+  etapa: Database["public"]["Enums"]["anexo_etapa"];
+  /** Foto ligada a uma medição do laudo (o id não vai para o navegador). */
+  daMedicao: boolean;
+};
 
 /** Fotos do recebimento/análise com URL assinada (1 h), geradas só no servidor. */
 export async function obterFotosPublicas(token: string, limite = 12): Promise<FotoPublica[]> {
@@ -113,7 +119,7 @@ export async function obterFotosPublicas(token: string, limite = 12): Promise<Fo
     for (const u of urls ?? []) if (u.path && u.signedUrl) mapa.set(u.path, u.signedUrl);
     return fotos.flatMap((f) => {
       const url = mapa.get(f.storage_path);
-      return url ? [{ url, legenda: f.legenda || null }] : [];
+      return url ? [{ url, legenda: f.legenda || null, etapa: f.etapa, daMedicao: f.medicao_id !== null }] : [];
     });
   } catch {
     return [];

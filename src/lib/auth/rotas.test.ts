@@ -12,6 +12,7 @@ describe("rotas", () => {
   it("ehRotaPublica", () => {
     expect(ehRotaPublica("/login")).toBe(true);
     expect(ehRotaPublica("/convite/x")).toBe(true);
+    expect(ehRotaPublica("/esqueci-senha")).toBe(true);
     expect(ehRotaPublica("/os-publica/x")).toBe(true);
     expect(ehRotaPublica("/auth/callback")).toBe(true);
     expect(ehRotaPublica("/wl/inicio")).toBe(false);

@@ -4,7 +4,10 @@ import * as React from "react";
 import { AlertTriangle, Loader2, Send, ShieldCheck, Trash2, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { CampoMoeda } from "@/components/catalogo/campo-moeda";
-import { SeletorItemCatalogo, type ItemCatalogo } from "@/components/catalogo/seletor-item-catalogo";
+import {
+  SeletorItemCatalogo,
+  type ItemCatalogo,
+} from "@/components/catalogo/seletor-item-catalogo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useEmpresa } from "@/lib/auth/empresa-context";
 import { formatarMoeda } from "@/lib/format";
+import { modoLocal } from "@/lib/modo";
 import { avaliarDesconto, calcularTotais, totalItem } from "@/lib/orcamento/calculos";
 import { cn } from "@/lib/utils";
 import {
@@ -52,7 +56,13 @@ type Props = {
 };
 
 /** Editor do rascunho: itens, desconto, validade, observações e totais ao vivo. */
-export function EditorOrcamento({ slug, osId, orcamento, itens: itensServidor, tabelaPrecoId }: Props) {
+export function EditorOrcamento({
+  slug,
+  osId,
+  orcamento,
+  itens: itensServidor,
+  tabelaPrecoId,
+}: Props) {
   const { empresa, membro } = useEmpresa();
   const [itens, setItens] = React.useState<ItemEditor[]>(itensServidor);
   const [desconto, setDesconto] = React.useState<number | null>(orcamento.desconto);
@@ -92,7 +102,10 @@ export function EditorOrcamento({ slug, osId, orcamento, itens: itensServidor, t
   function adicionar(item: ItemCatalogo) {
     executar(async () => {
       if (item.tipo === "kit") {
-        const r = await adicionarKitAction(slug, osId, { orcamento_id: orcamento.id, kit_id: item.id });
+        const r = await adicionarKitAction(slug, osId, {
+          orcamento_id: orcamento.id,
+          kit_id: item.id,
+        });
         if (resultado(r) && r.ok) toast.success(`Kit inserido (${r.dados.itens} itens).`);
         return;
       }
@@ -134,7 +147,12 @@ export function EditorOrcamento({ slug, osId, orcamento, itens: itensServidor, t
   function enviar() {
     executar(async () => {
       const r = await enviarOrcamentoAction(slug, osId, orcamento.id);
-      if (resultado(r)) toast.success("Orçamento enviado. Compartilhe o link com o cliente.");
+      if (resultado(r))
+        toast.success(
+          modoLocal()
+            ? "Orçamento enviado. Baixe o PDF e mande ao cliente."
+            : "Orçamento enviado. Compartilhe o link com o cliente.",
+        );
     });
   }
 
@@ -170,7 +188,7 @@ export function EditorOrcamento({ slug, osId, orcamento, itens: itensServidor, t
               key={i.id}
               className={cn(
                 "rounded-xl border bg-superficie p-3 md:p-4",
-                i.sugerido_por ? "border-alerta border-l-4 bg-alerta-suave/40" : "border-borda",
+                i.sugerido_por ? "border-l-4 border-alerta bg-alerta-suave/40" : "border-borda",
               )}
             >
               <div className="flex items-start justify-between gap-2">
@@ -210,7 +228,9 @@ export function EditorOrcamento({ slug, osId, orcamento, itens: itensServidor, t
                     min={0.01}
                     step="any"
                     value={i.quantidade}
-                    onChange={(e) => alterarItem(i.id, { quantidade: Math.max(Number(e.target.value), 0) })}
+                    onChange={(e) =>
+                      alterarItem(i.id, { quantidade: Math.max(Number(e.target.value), 0) })
+                    }
                     onBlur={() => i.quantidade > 0 && salvarItem(i.id)}
                     className="text-right tabular-nums"
                   />
@@ -286,7 +306,10 @@ export function EditorOrcamento({ slug, osId, orcamento, itens: itensServidor, t
           </div>
         </div>
 
-        <div className="space-y-2 rounded-xl border border-borda bg-superficie p-4" aria-live="polite">
+        <div
+          className="space-y-2 rounded-xl border border-borda bg-superficie p-4"
+          aria-live="polite"
+        >
           <Linha rotulo="Subtotal dos itens" valor={totais.bruto} />
           {totais.descontoItens > 0 && (
             <Linha rotulo="Descontos nos itens" valor={-totais.descontoItens} />

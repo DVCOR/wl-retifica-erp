@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { SITE_URL } from "@/lib/env";
+import { modoLocal } from "@/lib/modo";
 import { linkWhatsapp, montarMensagemRecebimento } from "@/lib/recebimento/whatsapp";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +44,7 @@ export function EtapaComprovante({
     numeroOs,
     empresa: nomeEmpresa,
     qtdDivergencias,
-    linkOs: `${SITE_URL}/os-publica/${tokenPublico}`,
+    linkOs: modoLocal() ? null : `${SITE_URL}/os-publica/${tokenPublico}`,
   });
   const semTelefone = !telefoneCliente;
 
@@ -104,8 +105,9 @@ export function EtapaComprovante({
       </div>
 
       <p className="text-sm text-texto-secundario">
-        No WhatsApp, anexe o PDF baixado à conversa. A mensagem já leva o link de acompanhamento da
-        OS.
+        {modoLocal()
+          ? "No WhatsApp, anexe o PDF baixado à conversa: o sistema da oficina não tem link para o cliente."
+          : "No WhatsApp, anexe o PDF baixado à conversa. A mensagem já leva o link de acompanhamento da OS."}
       </p>
 
       <div className="flex flex-wrap gap-3 border-t border-borda pt-4">

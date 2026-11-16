@@ -1,3 +1,4 @@
+import { urlParaNavegador } from "@/lib/env";
 import "server-only";
 import { criarClienteServidor } from "@/lib/supabase/server";
 import { BUCKET_ANEXOS } from "@/lib/recebimento/armazenamento";
@@ -10,7 +11,11 @@ import type { Database } from "@/lib/supabase/types";
 
 type Anexo = Database["public"]["Enums"]["anexo_etapa"];
 
-export type Tecnico = { id: string; nome: string; papel: "dono" | "tecnico" | "balcao" | "financeiro" };
+export type Tecnico = {
+  id: string;
+  nome: string;
+  papel: "dono" | "tecnico" | "balcao" | "financeiro";
+};
 
 export async function listarResponsaveis(empresaId: string): Promise<Tecnico[]> {
   const supabase = await criarClienteServidor();
@@ -180,7 +185,10 @@ export type EventoHistorico = {
   motivo: string | null;
 };
 
-export async function listarHistoricoOs(empresaId: string, osId: string): Promise<EventoHistorico[]> {
+export async function listarHistoricoOs(
+  empresaId: string,
+  osId: string,
+): Promise<EventoHistorico[]> {
   const supabase = await criarClienteServidor();
   const [{ data, error }, resp] = await Promise.all([
     supabase
@@ -203,7 +211,13 @@ export async function listarHistoricoOs(empresaId: string, osId: string): Promis
   }));
 }
 
-export type AnexoView = { id: string; etapa: Anexo; legenda: string | null; url: string | null; quando: string };
+export type AnexoView = {
+  id: string;
+  etapa: Anexo;
+  legenda: string | null;
+  url: string | null;
+  quando: string;
+};
 
 export async function listarAnexosOs(empresaId: string, osId: string): Promise<AnexoView[]> {
   const supabase = await criarClienteServidor();
@@ -216,13 +230,12 @@ export async function listarAnexosOs(empresaId: string, osId: string): Promise<A
   if (error) throw new Error(`Erro ao carregar anexos: ${error.message}`);
   const urls = new Map<string, string>();
   if (data.length) {
-    const { data: ass } = await supabase.storage
-      .from(BUCKET_ANEXOS)
-      .createSignedUrls(
-        data.map((a) => a.storage_path),
-        3600,
-      );
-    for (const a of ass ?? []) if (a.path && a.signedUrl) urls.set(a.path, a.signedUrl);
+    const { data: ass } = await supabase.storage.from(BUCKET_ANEXOS).createSignedUrls(
+      data.map((a) => a.storage_path),
+      3600,
+    );
+    for (const a of ass ?? [])
+      if (a.path && a.signedUrl) urls.set(a.path, urlParaNavegador(a.signedUrl));
   }
   return data.map((a) => ({
     id: a.id,

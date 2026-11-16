@@ -1,5 +1,7 @@
 import "server-only";
+import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { criarClienteServidor } from "@/lib/supabase/server";
+import { acessoParaExibir } from "@/lib/validacoes/auth";
 import type { Papel } from "@/lib/auth/permissoes";
 
 /**
@@ -50,4 +52,39 @@ export async function listarMembros(empresaId: string): Promise<MembroLista[]> {
     .order("nome");
   if (error) throw new Error(`Erro ao listar membros: ${error.message}`);
   return (data ?? []).map((m) => ({ ...m, limite_desconto_pct: Number(m.limite_desconto_pct) }));
+}
+
+export type MembroComAcesso = MembroLista & {
+  user_id: string;
+  /** E-mail ou login (sem o sufixo @wl.local). Vazio se não disponível. */
+  acesso: string;
+};
+
+/**
+ * Membros com o e-mail/login de cada um (vem do Auth, via service role —
+ * só chame depois de checar `usuarios.gerenciar`).
+ */
+export async function listarMembrosComAcesso(empresaId: string): Promise<MembroComAcesso[]> {
+  const supabase = await criarClienteServidor();
+  const { data, error } = await supabase
+    .from("membros")
+    .select("id, user_id, nome, papel, limite_desconto_pct, ativo, created_at")
+    .eq("empresa_id", empresaId)
+    .order("ativo", { ascending: false })
+    .order("nome");
+  if (error) throw new Error(`Erro ao listar membros: ${error.message}`);
+
+  const admin = criarClienteAdmin();
+  return Promise.all(
+    (data ?? []).map(async (m) => {
+      let acesso = "";
+      try {
+        const { data: u } = await admin.auth.admin.getUserById(m.user_id);
+        acesso = acessoParaExibir(u.user?.email);
+      } catch {
+        // sem o e-mail a lista continua útil
+      }
+      return { ...m, limite_desconto_pct: Number(m.limite_desconto_pct), acesso };
+    }),
+  );
 }

@@ -475,6 +475,21 @@ Leia docs/SPEC.md antes de qualquer tarefa. Ele é a fonte de verdade do produto
 
 ---
 
+## 17. Modo local (offline)
+
+**Mudança de requisito:** o sistema roda num computador da oficina, **sem internet**, acessado só pela rede local (PC, tablet e celulares da equipe no Wi-Fi da oficina). Só a WL usa; ninguém acessa de fora, nem o cliente por link. Flag `NEXT_PUBLIC_MODO_LOCAL=true` (padrão do produto; flag desligada = nuvem, que continua funcionando). A instalação (Docker) está em `deploy/local/`.
+
+Decisões:
+- **Sem link público.** A rota `/os-publica/[token]` responde 404; somem "link para o cliente", "revogar link" e o link nas mensagens. O caminho principal é **Baixar PDF** (orçamento e comprovante) e o balcão enviar pelo WhatsApp do **próprio celular** (4G), usando o texto pronto sem link do sistema, e **registrar a aprovação** (presencial/telefone/WhatsApp) no orçamento.
+- **Sem e-mail.** O login é só e-mail/login + senha (some a aba "Receber link"); "Esqueci minha senha" diz "Peça ao dono para redefinir sua senha". Não existe convite por e-mail (`/convite/*` dá 404).
+- **Usuários criados pelo dono** em Configurações, Usuários (`/[empresa]/configuracoes/usuarios`, ação `usuarios.gerenciar`, só dono): criar usuário (nome, e-mail **ou só um login** como `balcao1`, que vira o e-mail interno `balcao1@wl.local`, senha inicial e papel), redefinir senha, mudar papel, ativar/desativar. Usa a API admin do GoTrue (service role, só no servidor); o vínculo à empresa é a função `adicionar_membro` (exige dono). O dono não se desativa nem deixa de ser dono sendo o último; o banco também garante pelo menos um dono ativo.
+- **Nada externo em runtime:** fontes, ícones, imagens, scripts e fontes/logo dos PDFs são locais; a única saída é o link `wa.me` aberto no celular do balcão.
+- **URL interna do Supabase:** o servidor usa `SUPABASE_URL_INTERNA` (ex.: `http://kong:8000`) quando definida; o navegador usa `NEXT_PUBLIC_SUPABASE_URL`. O nome do cookie de sessão é fixado a partir da URL pública, e URLs assinadas do Storage são reescritas para a URL pública.
+- **PWA leve:** o manifest usa só caminhos relativos e funciona em qualquer origem; sem service worker. Câmera do navegador (leitor de QR) e "instalar o app" exigem HTTPS ou `localhost`; a captura de foto por `<input capture>` funciona em HTTP.
+- **Mensagens de erro de login** distinguem servidor fora do ar ("Não foi possível falar com o servidor da oficina") de senha errada (também na nuvem).
+
+---
+
 ## 16. Questões em aberto (validar com o proprietário)
 
 1. Cobra taxa de análise/desmontagem quando o orçamento é reprovado? Valor fixo ou por tipo de motor?

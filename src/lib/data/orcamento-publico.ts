@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
+import { SUPABASE_ANON_KEY, SUPABASE_URL_SERVIDOR, urlParaNavegador } from "@/lib/env";
 import { criarClienteAdmin } from "@/lib/supabase/admin";
 import { BUCKET_ANEXOS } from "@/lib/recebimento/armazenamento";
 import type { Database } from "@/lib/supabase/types";
@@ -76,7 +76,7 @@ export type OsPublica = {
 };
 
 export function clienteAnonimo() {
-  return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  return createClient<Database>(SUPABASE_URL_SERVIDOR, SUPABASE_ANON_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
@@ -116,10 +116,13 @@ export async function obterFotosPublicas(token: string, limite = 12): Promise<Fo
       3600,
     );
     const mapa = new Map<string, string>();
-    for (const u of urls ?? []) if (u.path && u.signedUrl) mapa.set(u.path, u.signedUrl);
+    for (const u of urls ?? [])
+      if (u.path && u.signedUrl) mapa.set(u.path, urlParaNavegador(u.signedUrl));
     return fotos.flatMap((f) => {
       const url = mapa.get(f.storage_path);
-      return url ? [{ url, legenda: f.legenda || null, etapa: f.etapa, daMedicao: f.medicao_id !== null }] : [];
+      return url
+        ? [{ url, legenda: f.legenda || null, etapa: f.etapa, daMedicao: f.medicao_id !== null }]
+        : [];
     });
   } catch {
     return [];

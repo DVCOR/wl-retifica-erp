@@ -4,6 +4,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Link from "next/link";
 import { Mail, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { modoLocal } from "@/lib/modo";
 import { loginLinkSchema, loginSenhaSchema } from "@/lib/validacoes/auth";
 import { entrarComSenha, enviarLinkMagico } from "./actions";
 
@@ -24,6 +26,8 @@ type DadosSenha = z.input<typeof loginSenhaSchema>;
 type DadosLink = z.input<typeof loginLinkSchema>;
 
 export function LoginForm({ proximo }: { proximo?: string }) {
+  // Modo local (offline): sem e-mail, só usuário/e-mail + senha.
+  if (modoLocal()) return <FormSenha proximo={proximo} />;
   return (
     <Tabs defaultValue="senha">
       <TabsList className="mb-2">
@@ -47,6 +51,7 @@ export function LoginForm({ proximo }: { proximo?: string }) {
 }
 
 function FormSenha({ proximo }: { proximo?: string }) {
+  const local = modoLocal();
   const [erro, setErro] = React.useState<string | null>(null);
   const [pendente, startTransition] = React.useTransition();
   const form = useForm<DadosSenha>({
@@ -69,9 +74,20 @@ function FormSenha({ proximo }: { proximo?: string }) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>E-mail</FormLabel>
+              <FormLabel>{local ? "E-mail ou login" : "E-mail"}</FormLabel>
               <FormControl>
-                <Input type="email" autoComplete="email" inputMode="email" {...field} />
+                {local ? (
+                  <Input
+                    type="text"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    {...field}
+                  />
+                ) : (
+                  <Input type="email" autoComplete="email" inputMode="email" {...field} />
+                )}
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -94,6 +110,12 @@ function FormSenha({ proximo }: { proximo?: string }) {
         <Button type="submit" size="lg" disabled={pendente} className="w-full">
           {pendente ? "Entrando…" : "Entrar"}
         </Button>
+        <Link
+          href="/esqueci-senha"
+          className="inline-flex min-h-11 items-center justify-center text-[15px] font-medium text-texto-secundario underline-offset-4 hover:underline"
+        >
+          Esqueci minha senha
+        </Link>
       </form>
     </Form>
   );

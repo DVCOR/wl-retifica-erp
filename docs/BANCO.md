@@ -31,6 +31,7 @@ Diferenças em relação ao SPEC item 12 (decisões):
 | `inicializar_empresa(empresa)` | dono/service | copia modelo (checklist, serviços, 2 tabelas de preço, 1 kit); idempotente |
 | `convite_info(token)` | anon | dados mínimos do convite |
 | `aceitar_convite(token, nome?)` | logado com o e-mail do convite | cria/reativa membro; devolve o slug |
+| `adicionar_membro(empresa, user_id, nome, papel)` | dono (definer) | **modo local:** vincula uma conta já criada no GoTrue (API admin) à empresa. Recusa não-dono, nome vazio, usuário inexistente, já membro ou membro de outra empresa; devolve o id do membro |
 | `proximo_numero_os(empresa)` | dono/balcão | `2026-000123`, atômico por empresa/ano (`os_sequencias`, fuso America/Sao_Paulo) |
 | `criar_os(empresa, cliente, motor?, template?, prazo?, cliente_final_*, os_origem?, tecnico?, obs?)` | dono/balcão (security invoker) | cria OS em `em_recebimento` e faz o **snapshot** dos itens do template (padrão da empresa se omitido; tudo `ok`) |
 | `alterar_status_os(os, status, motivo?)` | conforme papel | valida transição, papel, técnico atribuído e pré-condições; grava histórico. Única forma de mudar status |
@@ -76,6 +77,10 @@ Triggers: `updated_at`; normalização (documento, telefone, placa); número/tok
 - Storage (`*_storage.sql`, só no Supabase real): bucket privado `os-anexos`, caminho `{empresa_id}/{os_id}/arquivo`; leitura por membros, upload dono/balcão/técnico, remoção dono/balcão. Bucket público `empresa-logos` (`{empresa_id}/...`, escrita do dono). `os_anexos.storage_path` tem check de prefixo `{empresa_id}/{os_id}/`.
 - **Endurecimento** (`20261116180000_endurecimento.sql`, testes `61_*`): `os_anexos.storage_path` e `os_assinaturas.imagem_path` rejeitam `..`, `//`, `\\` e caracteres de controle (`caminho_storage_seguro`; assinatura também exige o prefixo `{empresa_id}/{os_id}/`); default privileges não dão nada a `anon` nem `execute` a `public` em objetos futuros; `membros.user_id/empresa_id` imutáveis (trigger); `criar_empresa` valida slug (`^[a-z0-9](-?[a-z0-9])*$`, 3–40, lista de reservados); assinatura `aprovacao` só pelas funções de resposta de orçamento; bucket `empresa-logos` sem SVG; técnico só conclui item (`marcar_item_concluido`) e só aponta em OS onde é o `tecnico_id` — OS sem técnico é assumida por ele (`_exigir_tecnico_da_os`); dono/balcão livres.
 - Realtime: `os`, `os_status_historico`, `apontamentos` e `orcamentos` na publicação `supabase_realtime` (se existir); a RLS vale para os eventos.
+
+## Modo local (offline)
+
+Migration `20261117090000_modo_local_membros.sql` (teste `70_modo_local_membros.sql`): só a função `adicionar_membro`. Mudar papel e ativar/desativar usam o `update` de `membros` já permitido ao dono pela RLS (mais o trigger do último dono). O banco continua o mesmo; o que muda é o app: criação de usuários pelo dono via GoTrue admin (e-mail interno `<login>@wl.local`), sem convite, sem `os_publica*` no uso (as funções existem, mas a rota pública responde 404). Variáveis: `NEXT_PUBLIC_MODO_LOCAL`, `SUPABASE_URL_INTERNA` (ver `.env.example`).
 
 ## Testes (`pnpm test:db`)
 

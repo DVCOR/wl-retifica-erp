@@ -1936,6 +1936,15 @@ export type Database = {
         Args: { p_kit_id: string; p_orcamento_id: string };
         Returns: number;
       };
+      adicionar_membro: {
+        Args: {
+          p_empresa_id: string;
+          p_nome: string;
+          p_papel: Database["public"]["Enums"]["papel"];
+          p_user_id: string;
+        };
+        Returns: string;
+      };
       alterar_status_os: {
         Args: {
           p_motivo?: string;

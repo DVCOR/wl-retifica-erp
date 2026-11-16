@@ -1,0 +1,20 @@
+import type { Metadata } from "next";
+import { PageHeader } from "@/components/app/page-header";
+import { EmConstrucao } from "@/components/app/em-construcao";
+import { SemAcesso } from "@/components/app/sem-acesso";
+import { obterContextoEmpresa } from "@/lib/auth/sessao";
+import { pode } from "@/lib/auth/permissoes";
+
+export const metadata: Metadata = { title: "Clientes" };
+
+export default async function Pagina({ params }: PageProps<"/[empresa]/clientes">) {
+  const { empresa: slug } = await params;
+  const { membro } = await obterContextoEmpresa(slug);
+  if (!pode(membro.papel, "clientes.ver")) return <SemAcesso slug={slug} />;
+  return (
+    <>
+      <PageHeader titulo="Clientes" descricao="Lojistas e clientes finais, com o histórico de serviços." />
+      <EmConstrucao modulo="A lista de clientes" />
+    </>
+  );
+}

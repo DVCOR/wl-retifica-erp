@@ -1,0 +1,5 @@
+# Arquivos montados nos containers Linux precisam de LF mesmo num checkout
+# Windows (core.autocrlf=true quebraria os .sh). Scripts Windows ficam CRLF.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.bat text eol=crlf

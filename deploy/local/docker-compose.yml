@@ -1,0 +1,429 @@
+# =============================================================================
+# WL Retífica ERP — instalação local (offline) na oficina.
+# Supabase self-hosted (baseado em supabase/supabase docker/docker-compose.yml)
+# + app Next.js + Caddy (HTTPS na rede local) + migrations + backup diário.
+#
+# Use os scripts de deploy/local/scripts/ (veja LEIA-ME.md). Manualmente:
+#   docker compose up -d                       # sobe tudo
+#   docker compose --profile admin up -d       # + Studio em http://127.0.0.1:54323
+#   docker compose run --rm ferramentas node criar-dono.mjs
+#
+# Removido do compose oficial (não usado pelo app): analytics/logflare, vector,
+# edge functions, supavisor (pooler), imgproxy (opcional: perfil "imagens"),
+# Studio e pg-meta (opcionais: perfil "admin").
+#
+# Versões das imagens: as do compose oficial em nov/2026 — confira antes de
+# instalar e só atualize testando (principalmente supabase/postgres).
+# =============================================================================
+name: wl-retifica
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # ------------------------------------------------------------ banco
+  db:
+    image: supabase/postgres:17.6.1.136
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - db-data:/var/lib/postgresql/data
+      - db-config:/etc/postgresql-custom
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_EXP: ${JWT_EXPIRY:-3600}
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+
+  # ------------------------------------------------------------ auth (GoTrue)
+  auth:
+    image: supabase/gotrue:v2.197.0
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: https://${WL_HOST}/auth/v1
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: https://${WL_HOST}
+      GOTRUE_URI_ALLOW_LIST: https://${WL_IP}/**,https://localhost/**
+      # Ninguém se cadastra sozinho: o dono cria os usuários (API admin).
+      GOTRUE_DISABLE_SIGNUP: "true"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_ISSUER: https://${WL_HOST}/auth/v1
+      # Login por e-mail + senha, sem enviar e-mail (não há internet nem SMTP).
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: "true"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      GOTRUE_SMS_AUTOCONFIRM: "false"
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+      # Todos os aparelhos chegam pelo Caddy/Kong: limite por IP real.
+      GOTRUE_RATE_LIMIT_HEADER: X-Forwarded-For
+
+  # ------------------------------------------------------------ API REST
+  rest:
+    image: postgrest/postgrest:v14.18
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public,graphql_public
+      PGRST_DB_MAX_ROWS: 1000
+      PGRST_DB_EXTRA_SEARCH_PATH: public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_ADMIN_SERVER_PORT: 3001
+      PGRST_ADMIN_SERVER_HOST: localhost
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_APP_SETTINGS_JWT_EXP: ${JWT_EXPIRY:-3600}
+    command: ["postgrest"]
+
+  # ------------------------------------------------------------ tempo real
+  realtime:
+    image: supabase/realtime:v2.148.3
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      default:
+        # O Realtime deduz o tenant ("realtime-dev") pelo host da requisição.
+        aliases:
+          - realtime-dev.supabase-realtime
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - 'curl -sSfL --head -o /dev/null -H "Authorization: Bearer $${API_KEY_SAUDE}" http://localhost:4000/api/tenants/realtime-dev/health'
+      timeout: 5s
+      interval: 30s
+      retries: 3
+      start_period: 10s
+    environment:
+      API_KEY_SAUDE: ${ANON_KEY}
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: postgres
+      DB_AFTER_CONNECT_QUERY: "SET search_path TO _realtime"
+      DB_ENC_KEY: ${REALTIME_DB_ENC_KEY}
+      API_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      METRICS_JWT_SECRET: ${JWT_SECRET}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      DNS_NODES: "''"
+      RLIMIT_NOFILE: "10000"
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
+      DISABLE_HEALTHCHECK_LOGGING: "true"
+
+  # ------------------------------------------------------------ arquivos (fotos, PDFs, logos)
+  storage:
+    image: supabase/storage-api:v1.89.12
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://storage:5000/status"]
+      timeout: 5s
+      interval: 5s
+      retries: 10
+      start_period: 10s
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      POSTGREST_URL: http://rest:3000
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      STORAGE_PUBLIC_URL: https://${WL_HOST}
+      REQUEST_ALLOW_X_FORWARDED_PATH: "true"
+      FILE_SIZE_LIMIT: 52428800
+      STORAGE_BACKEND: file
+      GLOBAL_S3_BUCKET: stub
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      TENANT_ID: stub
+      REGION: stub
+      # Transformação de imagem desligada (o app não usa). Para ligar:
+      # IMAGENS_TRANSFORMACAO=true no .env + `--profile imagens`.
+      ENABLE_IMAGE_TRANSFORMATION: ${IMAGENS_TRANSFORMACAO:-false}
+      IMGPROXY_URL: http://imgproxy:5001
+    volumes:
+      - storage-data:/var/lib/storage
+
+  imgproxy:
+    image: darthsim/imgproxy:v4.0.21
+    profiles: [imagens]
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - storage-data:/var/lib/storage:ro
+    healthcheck:
+      test: ["CMD", "imgproxy", "health"]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      IMGPROXY_BIND: ":5001"
+      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
+      IMGPROXY_USE_ETAG: "true"
+      IMGPROXY_AUTO_WEBP: "true"
+      IMGPROXY_MAX_SRC_RESOLUTION: 16.8
+
+  # ------------------------------------------------------------ gateway do Supabase
+  kong:
+    image: kong/kong:3.9.3
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      auth:
+        condition: service_started
+      rest:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - ./volumes/api/kong.yml:/home/kong/temp.yml:ro
+      - ./volumes/api/kong-entrypoint.sh:/home/kong/kong-entrypoint.sh:ro
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_DNS_NOT_FOUND_TTL: 1
+      KONG_DNS_VALID_TTL: 5
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,request-termination,post-function
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      # Uploads de foto/PDF (limite do bucket os-anexos: 15 MB).
+      KONG_NGINX_HTTP_CLIENT_MAX_BODY_SIZE: 50m
+      KONG_PROXY_ACCESS_LOG: /dev/stdout combined
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    entrypoint: ["/bin/sh", "/home/kong/kong-entrypoint.sh"]
+
+  # ------------------------------------------------------------ migrations do app
+  # Roda a cada `up`: aplica supabase/migrations/*.sql que ainda não rodaram
+  # (controle em supabase_migrations.schema_migrations, igual à Supabase CLI).
+  migracoes:
+    image: supabase/postgres:17.6.1.136
+    restart: "no"
+    logging: *logging
+    depends_on:
+      db:
+        condition: service_healthy
+      auth:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+    entrypoint: ["bash", "/ferramentas/aplicar-migracoes.sh"]
+    volumes:
+      - ../../supabase/migrations:/migracoes:ro
+      - ./ferramentas:/ferramentas:ro
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      MIGRACOES_USUARIO: ${MIGRACOES_USUARIO:-postgres}
+
+  # ------------------------------------------------------------ app Next.js
+  app:
+    image: wl-retifica-app:local
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      migracoes:
+        condition: service_completed_successfully
+      caddy:
+        condition: service_healthy
+      kong:
+        condition: service_healthy
+    environment:
+      WL_HOST: ${WL_HOST}
+      ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      # SSR/Server Actions falam direto com o Kong (rede interna do Docker);
+      # o navegador usa https://WL_HOST (NEXT_PUBLIC_SUPABASE_URL).
+      SUPABASE_URL_INTERNA: http://kong:8000
+      # Se algo no servidor chamar https://WL_HOST, confia na CA do Caddy.
+      NODE_EXTRA_CA_CERTS: /caddy-data/caddy/pki/authorities/local/root.crt
+      TZ: America/Sao_Paulo
+    volumes:
+      - caddy-data:/caddy-data:ro
+
+  # ------------------------------------------------------------ HTTPS na rede local
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    networks:
+      default:
+        # Dentro do Docker, WL_HOST (ex.: wl.local) aponta para o Caddy: o
+        # servidor do app chama https://WL_HOST mesmo sem DNS na rede.
+        aliases:
+          - ${WL_HOST}
+    healthcheck:
+      test: ["CMD", "test", "-f", "/data/caddy/pki/authorities/local/root.crt"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    environment:
+      WL_ENDERECOS: ${WL_ENDERECOS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  # ------------------------------------------------------------ backup diário
+  # A cada 10 min: se ainda não há backup de hoje e já passou de BACKUP_HORA,
+  # faz pg_dump + cópia dos arquivos em ./backups (apaga os de mais de
+  # BACKUP_DIAS dias). Funciona mesmo que o PC fique desligado à noite.
+  backup:
+    image: supabase/postgres:17.6.1.136
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["bash", "/ferramentas/backup-agendado.sh"]
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGUSER: supabase_admin
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: postgres
+      BACKUP_HORA: ${BACKUP_HORA:-12}
+      BACKUP_DIAS: ${BACKUP_DIAS:-30}
+      JWT_EXP: ${JWT_EXPIRY:-3600}
+      # Horário de Brasília sem depender de tzdata na imagem.
+      TZ: "<-03>3"
+    volumes:
+      - ./ferramentas:/ferramentas:ro
+      - ./backups:/backups
+      - ./.env:/config/env:ro
+      - storage-data:/var/lib/storage
+
+  # ------------------------------------------------------------ ferramentas (sob demanda)
+  # docker compose run --rm ferramentas node criar-dono.mjs
+  ferramentas:
+    image: node:22-bookworm-slim
+    profiles: [ferramentas]
+    working_dir: /ferramentas
+    volumes:
+      - ./ferramentas:/ferramentas:ro
+    environment:
+      SUPABASE_URL_INTERNA: http://kong:8000
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      WL_HOST: ${WL_HOST}
+
+  # ------------------------------------------------------------ administração (opcional)
+  # docker compose --profile admin up -d  ->  http://127.0.0.1:54323 (só no PC servidor)
+  meta:
+    image: supabase/postgres-meta:v0.100.0
+    profiles: [admin]
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: postgres
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+
+  studio:
+    image: supabase/studio:2026.11.02-sha-a05e7ec
+    profiles: [admin]
+    restart: unless-stopped
+    logging: *logging
+    depends_on:
+      meta:
+        condition: service_started
+    ports:
+      # Só no próprio PC servidor (o Studio não tem senha).
+      - "127.0.0.1:54323:3000"
+    environment:
+      HOSTNAME: "0.0.0.0"
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: db
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER_READ_WRITE: postgres
+      PG_META_CRYPTO_KEY: ${PG_META_CRYPTO_KEY}
+      PGRST_DB_SCHEMAS: public,graphql_public
+      DEFAULT_ORGANIZATION_NAME: WL Retífica
+      DEFAULT_PROJECT_NAME: Oficina
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_PUBLIC_URL: https://${WL_HOST}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      AUTH_JWT_SECRET: ${JWT_SECRET}
+      ENABLED_FEATURES_LOGS_ALL: "false"
+
+volumes:
+  db-data:
+  db-config:
+  storage-data:
+  caddy-data:
+  caddy-config:

@@ -43,3 +43,9 @@ next-env.d.ts
 
 # claude / ferramentas locais
 /supabase/.temp
+
+# instalação local (deploy/local): segredos, backups e pacotes de imagens
+/deploy/local/.env
+/deploy/local/backups/
+/deploy/local/pacote/
+/deploy/local/certificado/

@@ -23,6 +23,23 @@ describe("rotas", () => {
     expect(caminhoSeguro("https://evil.com")).toBe("/");
     expect(caminhoSeguro(null, "/x")).toBe("/x");
   });
+  it("caminhoSeguro barra TAB/LF/barra invertida que o parser de URL transforma em //", () => {
+    for (const ataque of [
+      "/\t/evil.com",
+      "/\n/evil.com",
+      "/\r/evil.com",
+      "/\\evil.com",
+      "/x\\..\\..\\/evil.com",
+    ]) {
+      expect(caminhoSeguro(ataque)).toBe("/");
+      // o destino final continua no próprio site
+      expect(new URL(caminhoSeguro(ataque), "https://app.wl").origin).toBe("https://app.wl");
+    }
+  });
+  it("caminhoSeguro preserva caminho, query e hash internos", () => {
+    expect(caminhoSeguro("/wl/os?status=pronto#x")).toBe("/wl/os?status=pronto#x");
+    expect(caminhoSeguro("/convite/abc")).toBe("/convite/abc");
+  });
   it("rotaEmpresa", () => {
     expect(rotaEmpresa("wl", "os", "nova")).toBe("/wl/os/nova");
     expect(rotaEmpresa("wl")).toBe("/wl");

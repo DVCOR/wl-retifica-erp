@@ -8,7 +8,15 @@ import { Mail, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form, FormControl, FormErro, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormErro,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { loginLinkSchema, loginSenhaSchema } from "@/lib/validacoes/auth";
 import { entrarComSenha, enviarLinkMagico } from "./actions";
 
@@ -25,7 +33,7 @@ export function LoginForm({ proximo }: { proximo?: string }) {
         </TabsTrigger>
         <TabsTrigger value="link" className="flex-1 justify-center">
           <Mail className="size-4" aria-hidden />
-          Link por e-mail
+          Receber link
         </TabsTrigger>
       </TabsList>
       <TabsContent value="senha">
@@ -95,7 +103,10 @@ function FormLink({ proximo }: { proximo?: string }) {
   const [erro, setErro] = React.useState<string | null>(null);
   const [enviado, setEnviado] = React.useState(false);
   const [pendente, startTransition] = React.useTransition();
-  const form = useForm<DadosLink>({ resolver: zodResolver(loginLinkSchema), defaultValues: { email: "", proximo } });
+  const form = useForm<DadosLink>({
+    resolver: zodResolver(loginLinkSchema),
+    defaultValues: { email: "", proximo },
+  });
 
   const onSubmit = (dados: DadosLink) =>
     startTransition(async () => {

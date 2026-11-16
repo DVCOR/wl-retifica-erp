@@ -14,12 +14,17 @@ export type Segmento<V extends string> = {
 };
 
 const tomSelecionado: Record<SegmentoTom, string> = {
-  neutro: "data-[state=checked]:bg-preto data-[state=checked]:text-white data-[state=checked]:border-preto",
-  sucesso: "data-[state=checked]:bg-sucesso data-[state=checked]:text-white data-[state=checked]:border-sucesso",
-  alerta: "data-[state=checked]:bg-alerta data-[state=checked]:text-white data-[state=checked]:border-alerta",
-  perigo: "data-[state=checked]:bg-perigo data-[state=checked]:text-white data-[state=checked]:border-perigo",
+  neutro:
+    "data-[state=checked]:bg-preto data-[state=checked]:text-white data-[state=checked]:border-preto",
+  sucesso:
+    "data-[state=checked]:bg-sucesso data-[state=checked]:text-white data-[state=checked]:border-sucesso",
+  alerta:
+    "data-[state=checked]:bg-alerta data-[state=checked]:text-white data-[state=checked]:border-alerta",
+  perigo:
+    "data-[state=checked]:bg-perigo data-[state=checked]:text-white data-[state=checked]:border-perigo",
   info: "data-[state=checked]:bg-info data-[state=checked]:text-white data-[state=checked]:border-info",
-  primaria: "data-[state=checked]:bg-primaria data-[state=checked]:text-white data-[state=checked]:border-primaria",
+  primaria:
+    "data-[state=checked]:bg-primaria data-[state=checked]:text-white data-[state=checked]:border-primaria",
 };
 
 type SegmentedControlProps<V extends string> = {
@@ -54,14 +59,17 @@ function SegmentedControl<V extends string>({
       onValueChange={(v) => onValorChange(v as V)}
       disabled={disabled}
       orientation="horizontal"
-      className={cn("inline-flex w-full gap-1 rounded-lg bg-fundo p-1", className)}
+      className={cn(
+        "inline-flex w-full gap-1 rounded-lg border border-borda bg-neutro-suave/50 p-1",
+        className,
+      )}
     >
       {segmentos.map((s) => (
         <RadioGroupPrimitive.Item
           key={s.valor}
           value={s.valor}
           className={cn(
-            "inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 text-sm font-semibold text-texto-secundario transition-colors hover:bg-superficie focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primaria disabled:opacity-50",
+            "inline-flex flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 text-sm font-semibold text-texto-secundario transition-colors hover:bg-superficie hover:text-texto focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primaria disabled:opacity-50",
             tamanho === "bancada" ? "min-h-12 text-base" : "min-h-11",
             tomSelecionado[s.tom ?? "neutro"],
           )}

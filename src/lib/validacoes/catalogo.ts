@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { UNIDADES_SERVICO } from "@/lib/catalogo/calculos";
 
 const MAX_VALOR = 9_999_999.99;
 
@@ -27,9 +26,7 @@ export const servicoSchema = z.object({
   codigo: textoOpcional(40),
   nome: z.string().trim().min(2, "Informe o nome do serviço").max(120, "Use até 120 caracteres"),
   categoria: textoOpcional(60),
-  unidade: z.enum(UNIDADES_SERVICO as [string, ...string[]], { error: "Escolha a unidade" }) as z.ZodType<
-    (typeof UNIDADES_SERVICO)[number]
-  >,
+  unidade: z.enum(["un", "cilindro", "valvula", "hora"], { error: "Escolha a unidade" }),
   preco_base: moeda("o preço base"),
   tempo_padrao_min: z
     .number({ error: "Informe um número inteiro" })

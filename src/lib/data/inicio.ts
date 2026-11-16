@@ -76,7 +76,7 @@ async function carregarAprovados(empresaId: string, dias: number): Promise<Aprov
   const supabase = await criarClienteServidor();
   const { data, error } = await supabase
     .from("orcamentos")
-    .select("os_id, total, respondido_em, os(cliente_id, clientes(nome, tipo))")
+    .select("os_id, total, respondido_em, os!orcamentos_os_id_empresa_id_fkey(cliente_id, clientes(nome, tipo))")
     .eq("empresa_id", empresaId)
     .eq("status", "aprovado")
     .gte("respondido_em", iso(dias))

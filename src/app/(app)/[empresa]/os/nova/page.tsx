@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/app/page-header";
-import { EmConstrucao } from "@/components/app/em-construcao";
+import { z } from "zod";
 import { SemAcesso } from "@/components/app/sem-acesso";
+import { NovaOsWizard } from "@/components/recebimento/nova-os-wizard";
 import { obterContextoEmpresa } from "@/lib/auth/sessao";
 import { pode } from "@/lib/auth/permissoes";
+import { obterClienteParaOs } from "@/lib/data/recebimento";
 
 export const metadata: Metadata = { title: "Nova OS" };
 
-export default async function Pagina({ params }: PageProps<"/[empresa]/os/nova">) {
+export default async function Pagina({ params, searchParams }: PageProps<"/[empresa]/os/nova">) {
   const { empresa: slug } = await params;
-  const { membro } = await obterContextoEmpresa(slug);
+  const { cliente: clienteParam } = await searchParams;
+  const { empresa, membro } = await obterContextoEmpresa(slug);
   if (!pode(membro.papel, "os.abrir")) return <SemAcesso slug={slug} />;
-  return (
-    <>
-      <PageHeader titulo="Nova OS" descricao="Cliente, motor, checklist, fotos e assinatura." />
-      <EmConstrucao modulo="O recebimento (Nova OS)" />
-    </>
-  );
+
+  const id = z
+    .string()
+    .uuid()
+    .safeParse(Array.isArray(clienteParam) ? clienteParam[0] : clienteParam);
+  const clienteInicial = id.success ? await obterClienteParaOs(empresa.id, id.data) : null;
+
+  return <NovaOsWizard slug={slug} clienteInicial={clienteInicial} />;
 }
